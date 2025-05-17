@@ -87,8 +87,11 @@ fun RowScope.AddItem(
             ) {
                 if (!selected) {
                     navController.navigate(item.route) {
-                        popUpTo(navController.graph.findStartDestination().id)
-                        launchSingleTop = true
+                        popUpTo(navController.graph.findStartDestination().id)  {
+                            saveState = true
+                        }
+                        launchSingleTop = true          // Không tạo lại màn hình nếu đang ở đó
+                        restoreState = true             // Khôi phục lại trạng thái trước (scroll...)
                     }
                 }
             },

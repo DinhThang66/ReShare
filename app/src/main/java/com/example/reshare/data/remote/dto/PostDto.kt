@@ -1,6 +1,6 @@
 package com.example.reshare.data.remote.dto
 
-data class PostsDto(
+data class PostListDto(
     val posts: List<PostDto>
 )
 

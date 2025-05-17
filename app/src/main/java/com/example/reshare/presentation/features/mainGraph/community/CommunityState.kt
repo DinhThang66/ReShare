@@ -1,7 +1,11 @@
 package com.example.reshare.presentation.features.mainGraph.community
 
-sealed class UiState<out T> {
-    data object Loading : UiState<Nothing>()
-    data class Success<T>(val data: T) : UiState<T>()
-    data class Error(val message: String) : UiState<Nothing>()
-}
+import com.example.reshare.domain.model.Post
+
+data class CommunityState(
+    val isLoading: Boolean = false,
+    val error: String? = null,
+
+    val posts: List<Post> = emptyList(),
+    val page: Int = 1       // Dự phòng nếu muốn phân trang
+)

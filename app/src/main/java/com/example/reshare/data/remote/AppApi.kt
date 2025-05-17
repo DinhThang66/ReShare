@@ -5,7 +5,7 @@ import com.example.reshare.data.remote.dto.CommentDto
 import com.example.reshare.data.remote.dto.CommentsDto
 import com.example.reshare.data.remote.dto.LoginRequest
 import com.example.reshare.data.remote.dto.LoginResponse
-import com.example.reshare.data.remote.dto.PostsDto
+import com.example.reshare.data.remote.dto.PostListDto
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.data.remote.dto.RegisterResponse
 import com.example.reshare.data.remote.dto.StreamTokenDto
@@ -27,7 +27,7 @@ interface AppApi {
 
     // Get Post
     @GET("api/post")
-    suspend fun getAllPosts(): Response<PostsDto>
+    suspend fun getAllPosts(): PostListDto
 
     // Comment Endpoint
     @GET("api/comment/{postId}")

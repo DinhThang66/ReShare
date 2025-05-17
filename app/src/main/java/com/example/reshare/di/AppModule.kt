@@ -1,7 +1,10 @@
 package com.example.reshare.di
 
 import android.content.Context
+import androidx.room.Room
+import com.example.reshare.data.local.AppDatabase
 import com.example.reshare.data.local.UserPreferences
+import com.example.reshare.data.local.post.PostDao
 import com.example.reshare.data.remote.AppApi
 import com.example.reshare.data.remote.interceptor.AuthInterceptor
 import com.example.reshare.data.repository.AuthRepositoryImpl
@@ -85,6 +88,23 @@ object AppModule {
             .create(AppApi::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "reShare.db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providePostDao(appDatabase: AppDatabase): PostDao {
+        return appDatabase.postDao
+    }
+
+
     // Repository bindings
     @Provides
     fun provideAuthRepository(api: AppApi): AuthRepository {
@@ -95,8 +115,8 @@ object AppModule {
         return ChatRepositoryImpl(api)
     }
     @Provides
-    fun providePostRepository(api: AppApi): PostRepository {
-        return PostRepositoryImpl(api)
+    fun providePostRepository(api: AppApi, dao: PostDao): PostRepository {
+        return PostRepositoryImpl(api, dao)
     }
     @Provides
     fun provideCommentRepository(api: AppApi): CommentRepository {

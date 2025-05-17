@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "posts")
 data class PostEntity(
     @PrimaryKey
-    val id: Int,
+    val id: String,
 
     val content: String,
     val createdBy: String,          // Json of User

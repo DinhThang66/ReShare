@@ -15,11 +15,11 @@ class PostTypeConverters {
     fun toUser(data: String): User = gson.fromJson(data, User::class.java)
 
     @TypeConverter
-    fun fromStringList(list: List<String>): String = gson.toJson(list)
+    fun fromList(list: List<String>): String = gson.toJson(list)
 
     @TypeConverter
-    fun toStringList(data: String): List<String> {
-        val listType = object : TypeToken<List<String>>() {}.type
-        return gson.fromJson(data, listType)
+    fun toList(data: String): List<String> {
+        val type  = object : TypeToken<List<String>>() {}.type
+        return gson.fromJson(data, type)
     }
 }

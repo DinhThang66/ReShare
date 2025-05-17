@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,10 +36,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +64,10 @@ fun CommunityScreen(
     navController: NavHostController,
     viewModel: CommunityViewModel = hiltViewModel(),
 ) {
-    val state = viewModel.postsState.value
+    val state by viewModel.state.collectAsState()
+    val listState = rememberSaveable(saver = LazyListState.Saver) {
+        LazyListState()
+    }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -102,8 +108,8 @@ fun CommunityScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         // Posts
-        when (state) {
-            is UiState.Loading -> {
+        when {
+            state.isLoading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
@@ -112,23 +118,24 @@ fun CommunityScreen(
                     CircularProgressIndicator()
                 }
             }
-            is UiState.Error -> {
+            state.error != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Lỗi: ${state.message}")
+                    Text(text = "Lỗi: ${state.error}")
                 }
             }
-            is UiState.Success -> {
+            else -> {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxSize() // Or .weight(1f)
                         .background(Color.White),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(state.data) { post ->
+                    items(state.posts) { post ->
                         CommunityPostCard(
                             username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
                             avatar = post.createdBy.profilePic,

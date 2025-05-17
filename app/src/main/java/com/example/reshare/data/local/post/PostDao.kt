@@ -1,14 +1,16 @@
 package com.example.reshare.data.local.post
 
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Dao
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
-//
-//interface PostDao {
-//    @Query("SELECT * FROM posts")
-//    fun getAllPosts(): Flow<List<PostEntity>>
-//
-//    @Insert(onConflict = OnConflictStrategy.REPLACE)
-//    suspend fun insertPosts(posts: List<PostEntity>
-//}
+import androidx.room.Upsert
+
+// suspend fun là một hàm hỗ trợ coroutine để thực hiện thao tác bất đồng bộ.
+
+@Dao
+interface PostDao {
+    @Query("SELECT * FROM posts")
+    fun getAllPosts(): List<PostEntity>
+
+    @Upsert
+    suspend fun upsertPosts(posts: List<PostEntity>)
+}
