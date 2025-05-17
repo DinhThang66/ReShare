@@ -6,9 +6,11 @@ import com.example.reshare.data.remote.AppApi
 import com.example.reshare.data.remote.interceptor.AuthInterceptor
 import com.example.reshare.data.repository.AuthRepositoryImpl
 import com.example.reshare.data.repository.ChatRepositoryImpl
+import com.example.reshare.data.repository.CommentRepositoryImpl
 import com.example.reshare.data.repository.PostRepositoryImpl
 import com.example.reshare.domain.repository.AuthRepository
 import com.example.reshare.domain.repository.ChatRepository
+import com.example.reshare.domain.repository.CommentRepository
 import com.example.reshare.domain.repository.PostRepository
 import dagger.Module
 import dagger.Provides
@@ -95,5 +97,9 @@ object AppModule {
     @Provides
     fun providePostRepository(api: AppApi): PostRepository {
         return PostRepositoryImpl(api)
+    }
+    @Provides
+    fun provideCommentRepository(api: AppApi): CommentRepository {
+        return CommentRepositoryImpl(api)
     }
 }

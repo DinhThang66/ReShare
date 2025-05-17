@@ -9,7 +9,8 @@ data class PostDto(
     val content: String,
     val createdBy: UserDto,
     val images: List<String>,
-    val likes: List<Any>,
+    val likes: List<String>,
+    val commentsCount: Int,
     val createdAt: String,
     val updatedAt: String,
 )

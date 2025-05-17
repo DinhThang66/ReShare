@@ -30,16 +30,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.example.reshare.R
 import com.example.reshare.presentation.utils.formatTimeAgo
 
 @Composable
 fun CommunityPostCard(
     username: String,
+    avatar: String,
     category: String,
     timeAgo: String,
     content: String,
@@ -68,14 +73,14 @@ fun CommunityPostCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(R.drawable.img),
+                    AsyncImage(
+                        model = avatar,
                         contentDescription = "Avatar",
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.img),
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -120,6 +125,30 @@ fun CommunityPostCard(
                 text = content,
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            if (imageUrls.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    imageUrls.forEach { imageUrl ->
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Post image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .height(200.dp), // hoặc .aspectRatio(16f / 9f)
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(R.drawable.img)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             // Footer: Comments & Likes
@@ -170,6 +199,7 @@ fun CommunityPostCard(
 fun CommunityPostCardPreview(modifier: Modifier = Modifier) {
     CommunityPostCard(
         username = "Tony",
+        avatar = "",
         category = "Spreading The Word",
         timeAgo = "58 minutes ago",
         content = "How do we collect from shops like amazon fresh , pret. 👨‍🍳🙇‍♂️🙇",

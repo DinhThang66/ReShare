@@ -71,47 +71,6 @@ fun CommunityScreen(
 
     var selectedCategory by remember { mutableStateOf("All") }
 
-    /*
-    Log.d("state", "$state")
-    // Text("$state")
-    when (state) {
-        is UiState.Loading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-
-        is UiState.Success -> {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(state.data) { post ->
-
-                    Text(text = post.content)
-                }
-            }
-        }
-
-        is UiState.Error -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Lỗi: ${state.message}")
-            }
-        }
-    }
-
-     */
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -172,12 +131,16 @@ fun CommunityScreen(
                     items(state.data) { post ->
                         CommunityPostCard(
                             username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
+                            avatar = post.createdBy.profilePic,
                             category = "Spreading The Word",
                             timeAgo = post.createdAt,
                             content = post.content,
-                            commentsCount = post.likes.size,
+                            commentsCount = post.commentsCount,
                             likesCount = post.likes.size,
+                            imageUrls = post.images,
                             onClick = {
+                                //navController.navigate(Screen.PostDetail.route)
+                                navController.currentBackStackEntry?.savedStateHandle?.set("post", post)
                                 navController.navigate(Screen.PostDetail.route)
                             }
                         )

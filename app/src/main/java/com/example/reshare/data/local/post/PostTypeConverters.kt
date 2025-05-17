@@ -1,0 +1,25 @@
+package com.example.reshare.data.local.post
+
+import androidx.room.TypeConverter
+import com.example.reshare.domain.model.User
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
+class PostTypeConverters {
+    private val gson = Gson()
+
+    @TypeConverter
+    fun fromUser(user: User): String = gson.toJson(user)
+
+    @TypeConverter
+    fun toUser(data: String): User = gson.fromJson(data, User::class.java)
+
+    @TypeConverter
+    fun fromStringList(list: List<String>): String = gson.toJson(list)
+
+    @TypeConverter
+    fun toStringList(data: String): List<String> {
+        val listType = object : TypeToken<List<String>>() {}.type
+        return gson.fromJson(data, listType)
+    }
+}

@@ -127,6 +127,7 @@ fun Section(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
             )
+            @Suppress("DEPRECATION")
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = null
