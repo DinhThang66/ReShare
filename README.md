@@ -6,6 +6,14 @@ Một thực tế hiện nay là khi một hộ gia đình mua một chiếc t�
 Hay một tình huống khác, các sinh viên mới lên thành phố để học đại học thì thường rất cần dụng cụ, giáo trình,... trong khi có nhiều người thừa chúng hoặc không cần dùng đến chúng nữa (ví dụ các anh chị khóa trên sau khi học xong một môn nào đó).<br>
 Chính vì thế ứng dụng này được xây dựng với mục tiêu là tạo ra các kết nối tương thân tương ái giữa người với người, giúp những người có nhu cầu thiện nguyện, mong muốn được đóng góp những đồ dùng các nhân không còn sử dụng cho nhưng ai đang thiếu.<br>
 
+## 🧑‍💻 Tech stack
+- **Language:** Kotlin only  
+- **UI:** Jetpack Compose  
+- **Architecture:** Clean Architecture + MVVM
+- **Caching:** Room  
+- **Dependency injection:** Hilt (Dagger Hilt)
+- **Backend:** Node.js
+  
 ## 🌐 Server
 Backend server cho ứng dụng ReShare được phát triển song song. Tìm Server repository [[here]](https://github.com/DinhThang66/ReShare_backend).
 
