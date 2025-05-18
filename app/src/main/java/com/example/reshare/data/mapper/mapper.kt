@@ -24,10 +24,11 @@ fun PostDto.toDomain(): Post {
     return Post(
         id = _id,
         content = content,
-        createdBy = createdBy.copy(email = "").toDomain(),
         images = images,
-        likes = likes,
+        createdBy = createdBy.copy(email = "").toDomain(),
         commentsCount = commentsCount,
+        likesCount = likesCount,
+        likedByCurrentUser = likedByCurrentUser,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -37,10 +38,11 @@ fun PostEntity.toDomain(): Post {
     return Post(
         id = id,
         content = content,
-        createdBy = gson.fromJson(createdBy, User::class.java),
         images = gson.fromJson(images, object : TypeToken<List<String>>() {}.type),
-        likes = gson.fromJson(likes, object : TypeToken<List<String>>() {}.type),
+        createdBy = gson.fromJson(createdBy, User::class.java),
         commentsCount = commentsCount,
+        likesCount = likesCount,
+        likedByCurrentUser = likedByCurrentUser,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -50,10 +52,11 @@ fun PostDto.toEntity(): PostEntity {
     return PostEntity(
         id = _id,
         content = content,
-        createdBy = gson.toJson(createdBy),
         images = gson.toJson(images),
-        likes = gson.toJson(likes),
+        createdBy = gson.toJson(createdBy),
         commentsCount = commentsCount,
+        likesCount = likesCount,
+        likedByCurrentUser = likedByCurrentUser,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

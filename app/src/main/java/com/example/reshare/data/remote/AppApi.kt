@@ -3,6 +3,7 @@ package com.example.reshare.data.remote
 import com.example.reshare.data.remote.dto.AddCommentRequest
 import com.example.reshare.data.remote.dto.CommentDto
 import com.example.reshare.data.remote.dto.CommentsDto
+import com.example.reshare.data.remote.dto.LikeResponseDto
 import com.example.reshare.data.remote.dto.LoginRequest
 import com.example.reshare.data.remote.dto.LoginResponse
 import com.example.reshare.data.remote.dto.PostListDto
@@ -13,7 +14,9 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface AppApi {
     @POST("api/auth/login")
@@ -27,7 +30,9 @@ interface AppApi {
 
     // Get Post
     @GET("api/post")
-    suspend fun getAllPosts(): PostListDto
+    suspend fun getPosts(@Query("page") page: Int): PostListDto
+    @PUT("api/post/{id}/like")
+    suspend fun toggleLike(@Path("id") postId: String): LikeResponseDto
 
     // Comment Endpoint
     @GET("api/comment/{postId}")
@@ -41,6 +46,6 @@ interface AppApi {
     ): Response<CommentDto>
 
     companion object {
-        const val BASE_URL = "http://192.168.0.101:5000/"
+        const val BASE_URL = "http://192.168.1.15:5000/"
     }
 }

@@ -1,10 +1,12 @@
 package com.example.reshare.data.repository
 
+import android.util.Log
 import coil.network.HttpException
 import com.example.reshare.data.local.post.PostDao
 import com.example.reshare.data.mapper.toDomain
 import com.example.reshare.data.mapper.toEntity
 import com.example.reshare.data.remote.AppApi
+import com.example.reshare.domain.model.PagedResult
 import com.example.reshare.domain.model.Post
 import com.example.reshare.domain.repository.PostRepository
 import com.example.reshare.presentation.utils.Resource
@@ -19,9 +21,10 @@ class PostRepositoryImpl (
     private val dao: PostDao
 ) : PostRepository {
 
-    override suspend fun getAllPosts(
-        forceFetchFromRemote: Boolean
-    ): Flow<Resource<List<Post>>> = flow {
+    override suspend fun getPosts(
+        forceFetchFromRemote: Boolean,
+        page: Int
+    ): Flow<Resource<PagedResult<Post>>> = flow {
         /***
          * Flow để xử lý luồng bất đồng bộ, khác với suspend chỉ trả về 1 giá trị duy nhất
          * Flow có thể phát ra (emit) nhiều giá trị liên tiếp (chuỗi hành động)
@@ -37,14 +40,18 @@ class PostRepositoryImpl (
         val shouldUseCache = localPosts.isNotEmpty() && !forceFetchFromRemote
 
         if (shouldUseCache) {
-            emit(Resource.Success(localPosts.map { it.toDomain() }))
+            emit(Resource.Success(
+                PagedResult(
+                    data = localPosts.map { it.toDomain() }
+                )
+            ))
             emit(Resource.Loading(false))
             // Kết thúc luồng dữ liệu
             return@flow
         }
 
         val postListFromApi = try {
-            api.getAllPosts()
+            api.getPosts(page)
         } catch (e: IOException) {
             emit(Resource.Error("Network error: ${e.message}"))
             emit(Resource.Loading(false))
@@ -68,7 +75,11 @@ class PostRepositoryImpl (
         dao.upsertPosts(postEntities)
         emit(
             Resource.Success(
-                postEntities.map { it.toDomain() }
+                PagedResult(
+                    data = postEntities.map { it.toDomain() },
+                    currentPage = postListFromApi.currentPage,
+                    totalPages = postListFromApi.totalPages
+                )
             ))
         emit(Resource.Loading(false))
     }
@@ -77,26 +88,3 @@ class PostRepositoryImpl (
 
 
 
-
-
-
-
-
-
-
-/*
-override suspend fun getAllPosts(): Result<List<Post>> {
-    return try {
-        val response = api.getAllPosts()
-        if (response.isSuccessful && response.body() != null) {
-            val body = response.body()!!
-            val posts = body.posts.map { it.toDomain() }
-            Result.success(posts)
-        } else {
-            Result.failure(Exception("Error server: ${response.message()}"))
-        }
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-}
- */

@@ -63,12 +63,6 @@ class MainActivity : ComponentActivity() {
 
             ReShareTheme {
                 when {
-                    hasValidToken == null || !isChatReady -> {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
-                    }
-
                     hasValidToken == false -> {
                         val navController = rememberNavController()
                         NavHost(
@@ -108,6 +102,12 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+                        }
+                    }
+
+                    !isChatReady -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
                         }
                     }
                 }

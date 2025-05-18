@@ -6,6 +6,10 @@ import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +38,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -148,6 +153,8 @@ fun PostDetailScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 item {
+                    var oke by remember { mutableStateOf(false) }
+
                     PostHeader(
                         avatar = post.createdBy.profilePic,
                         username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
@@ -156,8 +163,12 @@ fun PostDetailScreen(
                         isNewbie = true,
                         content = post.content,
                         commentsCount = post.commentsCount,
-                        likesCount = post.likes.size,
-                        postImage = post.images.firstOrNull()
+                        likesCount = post.likesCount,
+                        postImage = post.images.firstOrNull(),
+                        isLiked = post.likedByCurrentUser,
+                        onLikeClick = {
+                            oke = !oke
+                        },
                     )
                 }
 
@@ -237,8 +248,19 @@ fun PostHeader(
     content: String,
     commentsCount: Int,
     likesCount: Int,
+    isLiked: Boolean = false,
+    onLikeClick: () -> Unit = {},
     postImage: String? = null
 ) {
+    // LIKE with press effect
+    val interactionSource = remember { MutableInteractionSource() }
+    var isPressed by remember { mutableStateOf(false) }
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction: Interaction ->
+            isPressed = interaction is PressInteraction.Press
+        }
+    }
+
     Row(
         modifier = Modifier.padding(top = 10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -249,7 +271,9 @@ fun PostHeader(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(R.drawable.user),
+            error = painterResource(R.drawable.user)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Column {
@@ -305,10 +329,29 @@ fun PostHeader(
             Text("$commentsCount comments", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable(
+                onClick = onLikeClick,
+                indication = null,          // Tắt ripple
+                interactionSource = interactionSource
+            )
+        ) {
+            Icon(
+                imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                tint = if (isLiked)
+                    Color.Red.copy(alpha = if (isPressed) 0.6f else 1f)
+                else
+                    Color.Gray.copy(alpha = if (isPressed) 0.6f else 1f),
+                contentDescription = null, modifier = Modifier.size(20.dp)
+            )
             Spacer(modifier = Modifier.width(4.dp))
-            Text("$likesCount likes", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+            Text(
+                "$likesCount likes",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray.copy(alpha = if (isPressed) 0.6f else 1f)
+            )
         }
     }
 }
@@ -342,7 +385,8 @@ fun CommentItem(
                     .size(32.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.img)
+                placeholder = painterResource(R.drawable.user),
+                error = painterResource(R.drawable.user)
             )
 
             Spacer(modifier = Modifier.width(8.dp))

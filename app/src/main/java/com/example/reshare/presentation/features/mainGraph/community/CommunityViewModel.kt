@@ -2,7 +2,7 @@ package com.example.reshare.presentation.features.mainGraph.community
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.reshare.domain.usecase.post.GetAllPostsUseCase
+import com.example.reshare.domain.usecase.post.GetPostsUseCase
 import com.example.reshare.presentation.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    private val getAllPostsUseCase : GetAllPostsUseCase
+    private val getPostsUseCase : GetPostsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommunityState())
@@ -26,61 +26,54 @@ class CommunityViewModel @Inject constructor(
     fun onEvent(event: CommunityUiEvent) {
         when (event) {
             is CommunityUiEvent.Refresh -> {
-                loadPosts(forceRefresh = true)
+                loadPosts(page = 1)
             }
-        }
-    }
-
-    private fun loadPosts(forceRefresh: Boolean = false) {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-
-            getAllPostsUseCase(
-                forceFetchFromRemote = forceRefresh
-            ).collectLatest { result ->
-                when (result) {
-                    is Resource.Loading -> _state.update {
-                        it.copy(isLoading = result.isLoading)
-                    }
-
-                    is Resource.Success -> result.data?.let { posts ->
-                        _state.update {
-                            it.copy(posts = posts, isLoading = false)
-                        }
-                    }
-
-                    is Resource.Error -> _state.update {
-                        it.copy(isLoading = false, error = result.message)
-                    }
+            is CommunityUiEvent.LoadNextPage -> {
+                if (!state.value.isPaginating && !state.value.isLastPage) {
+                    loadPosts(page = state.value.currentPage + 1)
                 }
             }
         }
     }
 
-}
+    private fun loadPosts(page: Int = 1, forceRefresh: Boolean = true) {
+        viewModelScope.launch {
+            // Set loading flags
+            _state.update {
+                if (page == 1) {
+                    it.copy(isInitialLoading = true, error = null)
+                } else {
+                    it.copy(isPaginating = true)
+                }
+            }
 
+            getPostsUseCase(
+                forceFetchFromRemote = forceRefresh,
+                page = page
+            ).collectLatest { result ->
+                when (result) {
+                    is Resource.Success -> result.data?.let { pagedResult  ->
+                        val newPosts = pagedResult.data
+                        val allPosts = if (page == 1) newPosts else state.value.posts + newPosts
 
+                        val isLastPage = pagedResult.currentPage >= pagedResult.totalPages
 
-
-
-
-
-
-
-/*
-init {
-    getAllPosts()
-}
-
-private fun getAllPosts() {
-    viewModelScope.launch {
-        _postsState.value = UiState.Loading
-        val result = getAllPostsUseCase()
-        _postsState.value = result.fold(
-            onSuccess = { UiState.Success(it) },
-            onFailure = { UiState.Error(it.message ?: "Unknown error") }
-        )
+                        _state.update {
+                            it.copy(
+                                posts = allPosts,
+                                currentPage = pagedResult.currentPage,
+                                isInitialLoading = false,
+                                isPaginating = false,
+                                isLastPage = isLastPage
+                            )
+                        }
+                    }
+                    is Resource.Error -> _state.update {
+                        it.copy(isInitialLoading = false, isPaginating = false, error = result.message)
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 }
-
- */

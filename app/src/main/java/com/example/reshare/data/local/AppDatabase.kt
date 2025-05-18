@@ -7,7 +7,7 @@ import com.example.reshare.data.local.post.PostDao
 import com.example.reshare.data.local.post.PostEntity
 import com.example.reshare.data.local.post.PostTypeConverters
 
-@Database(entities = [PostEntity::class], version = 1, exportSchema = false)
+@Database(entities = [PostEntity::class], version = 2, exportSchema = false)
 @TypeConverters(PostTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract val postDao: PostDao

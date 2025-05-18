@@ -95,8 +95,9 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "reShare.db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
+
 
     @Provides
     @Singleton

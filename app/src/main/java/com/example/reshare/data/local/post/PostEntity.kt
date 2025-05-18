@@ -17,8 +17,9 @@ data class PostEntity(
     val content: String,
     val createdBy: String,          // Json of User
     val images: String,             // Json of List<String>
-    val likes: String,              // Json of List<String>
     val commentsCount: Int,
+    val likesCount: Int,
+    val likedByCurrentUser: Boolean,
     val createdAt: String,
     val updatedAt: String,
 )

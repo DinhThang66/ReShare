@@ -33,6 +33,7 @@ fun ItemDetailScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
+                        @Suppress("DEPRECATION")
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
