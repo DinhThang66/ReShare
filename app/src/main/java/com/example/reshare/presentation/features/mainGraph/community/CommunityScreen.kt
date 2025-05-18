@@ -22,9 +22,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,8 +60,11 @@ import com.example.reshare.presentation.components.CommunityPostCard
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.categories
 import com.example.reshare.ui.theme.DarkPurple
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+    ExperimentalMaterialApi::class
+)
 @Composable
 fun CommunityScreen(
     innerPadding: PaddingValues,
@@ -79,6 +86,10 @@ fun CommunityScreen(
     )
     var showSheet by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("All") }
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state.isInitialLoading,
+        onRefresh = { viewModel.onEvent(CommunityUiEvent.Refresh) }
+    )
 
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -102,65 +113,74 @@ fun CommunityScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(innerPadding)
-            .padding(horizontal = 16.dp)
+            .pullRefresh(pullRefreshState)
     ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Posts",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Button(
-                onClick = { showSheet = true },
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkPurple),
-                border = BorderStroke(1.dp, DarkPurple)
-            ) {
-                Text(text = "Category")
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
 
-        // Posts
-        when {
-            state.isInitialLoading  -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Posts",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Button(
+                    onClick = { showSheet = true },
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkPurple),
+                    border = BorderStroke(1.dp, DarkPurple)
                 ) {
-                    CircularProgressIndicator()
+                    Text(text = "Category")
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
             }
-            state.error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "Lỗi: ${state.error}")
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Posts
+            when {
+                state.isInitialLoading  -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
-            else -> {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize() // Or .weight(1f)
-                        .background(Color.White),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    items(state.posts) { post -> CommunityPostCard(
+                state.error != null -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        item {
+                            Text(text = "Lỗi: ${state.error}")
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize() // Or .weight(1f)
+                            .background(Color.White),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(state.posts) { post -> CommunityPostCard(
                             username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
                             avatar = post.createdBy.profilePic,
                             category = "Spreading The Word",
@@ -179,100 +199,109 @@ fun CommunityScreen(
                                 navController.navigate(Screen.PostDetail.route)
                             }
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                    if (state.isPaginating && !state.isLastPage) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                        if (state.isPaginating && !state.isLastPage) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
                                 }
                             }
                         }
                     }
                 }
-
-        // Bottom Sheet
-        if (showSheet) {
-            LaunchedEffect(Unit) {
-                sheetState.expand()
             }
 
-            ModalBottomSheet(
-                onDismissRequest = { showSheet = false },
-                sheetState = sheetState,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .navigationBarsPadding()
+            // Bottom Sheet
+            if (showSheet) {
+                LaunchedEffect(Unit) {
+                    sheetState.expand()
+                }
+
+                ModalBottomSheet(
+                    onDismissRequest = { showSheet = false },
+                    sheetState = sheetState,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
                 ) {
-                    Text(
-                        text = "Category",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        categories.forEach { category ->
-                            val isSelected = selectedCategory == category
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isSelected) Color(0xFFF1E7FF)
-                                        else Color.White
-                                    )
-                                    .clickable { selectedCategory = category }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = if (isSelected) DarkPurple else Color.LightGray,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = category,
-                                    fontSize = 13.sp,
-                                    color = Color.Black,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = {
-                            showSheet = false
-                                  // Apply selectedCategory here
-                                },
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(50),
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkPurple)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .navigationBarsPadding()
                     ) {
-                        Text(text = "Apply", color = Color.White)
+                        Text(
+                            text = "Category",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            categories.forEach { category ->
+                                val isSelected = selectedCategory == category
+                                Row(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (isSelected) Color(0xFFF1E7FF)
+                                            else Color.White
+                                        )
+                                        .clickable { selectedCategory = category }
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = if (isSelected) DarkPurple else Color.LightGray,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = category,
+                                        fontSize = 13.sp,
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = {
+                                showSheet = false
+                                // Apply selectedCategory here
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = DarkPurple)
+                        ) {
+                            Text(text = "Apply", color = Color.White)
+                        }
                     }
                 }
             }
         }
+
+
+        // Pull-to-refresh indicator
+        PullRefreshIndicator(
+            refreshing = state.isInitialLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
