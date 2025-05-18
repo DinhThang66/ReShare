@@ -3,6 +3,7 @@ package com.example.reshare.presentation.features.mainGraph.community.postDetail
 import android.app.Activity
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -74,6 +75,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.reshare.R
 import com.example.reshare.domain.model.Post
+import com.example.reshare.presentation.features.mainGraph.community.CommunityUiEvent
 import com.example.reshare.presentation.utils.Resource
 import com.example.reshare.presentation.utils.formatTimeAgo
 import kotlinx.coroutines.delay
@@ -85,51 +87,68 @@ fun PostDetailScreen(
     navController: NavController,
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
-    val post = requireNotNull(
-        navController.previousBackStackEntry
-            ?.savedStateHandle
-            ?.get<Post>("post")
-    ) { "Post is missing from SavedStateHandle" }
-
-    val commentState by viewModel.commentsState.collectAsState()
-    val addCommentState by viewModel.addCommentState.collectAsState()
-    var commentText by remember { mutableStateOf("") }
-
-    val listState = rememberLazyListState()
-    val highlightedId by viewModel.highlightedCommentId.collectAsState()
-
+    val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
+    val listState = rememberLazyListState()
+    var commentText by remember { mutableStateOf("") }
 
+    val post = state.post
+    val highlightedId = state.highlightedCommentId
+
+    // Set post and load comments
     LaunchedEffect(Unit) {
         @Suppress("DEPRECATION")
         activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        viewModel.getComments(post.id)
-    }
-
-    // Xử lý trạng thái gửi comment
-    LaunchedEffect(addCommentState) {
-        when (addCommentState) {
-            is Resource.Success -> {
-                commentText = ""
-                listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
-                viewModel.resetAddCommentState()
-            }
-            is Resource.Error -> {
-                val message = (addCommentState as Resource.Error).message
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                viewModel.resetAddCommentState()
-            }
-            else -> {}
+        val savedPost = navController.previousBackStackEntry
+            ?.savedStateHandle
+            ?.get<Post>("post")
+        savedPost?.let {
+            viewModel.onEvent(PostDetailUiEvent.SetPost(it))
+            viewModel.onEvent(PostDetailUiEvent.LoadComments(it.id))
         }
     }
+
+    // Handle comment post result
+    LaunchedEffect(state.isAddingComment, state.highlightedCommentId, state.addCommentError) {
+        if (!state.isAddingComment && state.addCommentError == null && state.highlightedCommentId != null) {
+            commentText = ""
+            listState.animateScrollToItem(state.comments.lastIndex)
+            viewModel.onEvent(PostDetailUiEvent.ResetAddCommentState)
+        }
+
+        if (state.addCommentError != null) {
+            Toast.makeText(context, state.addCommentError, Toast.LENGTH_SHORT).show()
+            viewModel.onEvent(PostDetailUiEvent.ResetAddCommentState)
+        }
+    }
+    
+    // Khi thoát màn hình detail thì trả về trạng thái đã thay đổi về màn hình Community
+    BackHandler {
+        viewModel.state.value.post?.let { updatedPost ->
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set("updatedPost", updatedPost)
+        }
+        navController.popBackStack()
+    }
+
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = {
+                            viewModel.state.value.post?.let { updatedPost ->
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("updatedPost", updatedPost)
+                            }
+                            navController.popBackStack()
+                        }
+                    ) {
                         Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
                     }
                 },
@@ -138,7 +157,6 @@ fun PostDetailScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { paddingValues ->
-
         val combinedInsets = WindowInsets.ime.union(WindowInsets.navigationBars).asPaddingValues()
 
         Column(
@@ -153,58 +171,59 @@ fun PostDetailScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 item {
-                    var oke by remember { mutableStateOf(false) }
-
-                    PostHeader(
-                        avatar = post.createdBy.profilePic,
-                        username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
-                        category = "Zero Waste",
-                        timeAgo = formatTimeAgo(post.createdAt),
-                        isNewbie = true,
-                        content = post.content,
-                        commentsCount = post.commentsCount,
-                        likesCount = post.likesCount,
-                        postImage = post.images.firstOrNull(),
-                        isLiked = post.likedByCurrentUser,
-                        onLikeClick = {
-                            oke = !oke
-                        },
-                    )
+                    post?.let {
+                        PostHeader(
+                            avatar = it.createdBy.profilePic,
+                            username = "${it.createdBy.lastName} ${it.createdBy.firstName}",
+                            category = "Zero Waste",
+                            timeAgo = formatTimeAgo(it.createdAt),
+                            isNewbie = true,
+                            content = it.content,
+                            commentsCount = it.commentsCount,
+                            likesCount = it.likesCount,
+                            postImage = it.images.firstOrNull(),
+                            isLiked = it.likedByCurrentUser,
+                            onLikeClick = {
+                                viewModel.onEvent(PostDetailUiEvent.ToggleLike(post.id))
+                            },
+                        )
+                    }
                 }
 
                 // Comment List
-                when (commentState) {
-                    is Resource.Loading -> item {
+                when {
+                    state.isLoading -> item {
                         Box(
                             modifier = Modifier
                                 .fillParentMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator()
-                        }                    }
-                    is Resource.Success -> {
-                        val comments = (commentState as Resource.Success).data ?: emptyList()
-                            items(comments) { comment ->
-                                CommentItem(
-                                    username = "${comment.createdBy.lastName} ${comment.createdBy.firstName}",
-                                    avatar = comment.createdBy.profilePic,
-                                    comment = comment.content,
-                                    likes = comment.likes.size,
-                                    time = formatTimeAgo(comment.createdAt),
-                                    highlight = comment.id == highlightedId
-                                )
-                            }
+                        }
                     }
-                    is Resource.Error -> item {
-                        val message = (commentState as Resource.Error).message
-                        Text(text = "Lỗi: $message", color = Color.Red)
+
+                    state.error != null -> item {
+                        Text("Lỗi: ${state.error}", color = Color.Red)
+                    }
+
+                    else -> {
+                        items(state.comments) { comment ->
+                            CommentItem(
+                                username = "${comment.createdBy.lastName} ${comment.createdBy.firstName}",
+                                avatar = comment.createdBy.profilePic,
+                                comment = comment.content,
+                                likes = comment.likes.size,
+                                time = formatTimeAgo(comment.createdAt),
+                                highlight = comment.id == highlightedId
+                            )
+                        }
                     }
                 }
 
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
 
-            // Enter Text
+            // Comment input
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -216,11 +235,11 @@ fun PostDetailScreen(
                     onValueChange = { commentText = it },
                     placeholder = { Text("Leave your comment here...") },
                     trailingIcon = {
-                        val isPosting = addCommentState is Resource.Loading
+                        val isPosting = state.isAddingComment
 
                         TextButton(onClick = {
-                            if (commentText.isNotBlank() && !isPosting) {
-                                viewModel.addComment(commentText, post.id)
+                            if (commentText.isNotBlank() && !isPosting && post != null) {
+                                viewModel.onEvent(PostDetailUiEvent.AddComment(commentText, post.id))
                             }
                         }) {
                             if (isPosting) {

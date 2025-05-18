@@ -3,6 +3,7 @@ package com.example.reshare.presentation.features.mainGraph.community
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.domain.usecase.post.GetPostsUseCase
+import com.example.reshare.domain.usecase.post.ToggleLike
 import com.example.reshare.presentation.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    private val getPostsUseCase : GetPostsUseCase
+    private val getPostsUseCase : GetPostsUseCase,
+    private val toggleLike: ToggleLike
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommunityState())
@@ -31,6 +33,17 @@ class CommunityViewModel @Inject constructor(
             is CommunityUiEvent.LoadNextPage -> {
                 if (!state.value.isPaginating && !state.value.isLastPage) {
                     loadPosts(page = state.value.currentPage + 1)
+                }
+            }
+            is CommunityUiEvent.ToggleLike -> {
+                togglePostLike(event.postId)
+            }
+            is CommunityUiEvent.UpdatePost -> {
+                _state.update { currentState ->
+                    val updatedPosts = currentState.posts.map {
+                        if (it.id == event.post.id) event.post else it
+                    }
+                    currentState.copy(posts = updatedPosts)
                 }
             }
         }
@@ -72,6 +85,27 @@ class CommunityViewModel @Inject constructor(
                         it.copy(isInitialLoading = false, isPaginating = false, error = result.message)
                     }
                     else -> {}
+                }
+            }
+        }
+    }
+
+    private fun togglePostLike(postId: String) {
+        viewModelScope.launch {
+            val result = toggleLike(postId)
+            if (result is Resource.Success) {
+                result.data?.let { like ->
+                    _state.update { currentState ->
+                        val updatedPosts = currentState.posts.map { post ->
+                            if (post.id == postId) {
+                                post.copy(
+                                    likesCount = like.likes,
+                                    likedByCurrentUser = like.liked
+                                )
+                            } else post
+                        }
+                        currentState.copy(posts = updatedPosts)
+                    }
                 }
             }
         }

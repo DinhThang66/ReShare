@@ -1,11 +1,11 @@
 package com.example.reshare.data.repository
 
-import android.util.Log
 import coil.network.HttpException
 import com.example.reshare.data.local.post.PostDao
 import com.example.reshare.data.mapper.toDomain
 import com.example.reshare.data.mapper.toEntity
 import com.example.reshare.data.remote.AppApi
+import com.example.reshare.domain.model.Like
 import com.example.reshare.domain.model.PagedResult
 import com.example.reshare.domain.model.Post
 import com.example.reshare.domain.repository.PostRepository
@@ -84,6 +84,18 @@ class PostRepositoryImpl (
         emit(Resource.Loading(false))
     }
 
+    override suspend fun toggleLike(postId: String): Resource<Like> {
+        return try {
+            val likeDto = api.toggleLike(postId)
+            Resource.Success(Like(likes = likeDto.likes, liked = likeDto.liked))
+        } catch (e: IOException) {
+            Resource.Error("Network error: ${e.message}")
+        } catch (e: HttpException) {
+            Resource.Error("Server error: ${e.message}")
+        } catch (e: Exception) {
+            Resource.Error("Unexpected error: ${e.message}")
+        }
+    }
 }
 
 

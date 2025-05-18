@@ -46,6 +46,6 @@ interface AppApi {
     ): Response<CommentDto>
 
     companion object {
-        const val BASE_URL = "http://192.168.1.15:5000/"
+        const val BASE_URL = "http://192.168.1.146:5000/"
     }
 }
