@@ -11,10 +11,12 @@ import com.example.reshare.data.repository.AuthRepositoryImpl
 import com.example.reshare.data.repository.ChatRepositoryImpl
 import com.example.reshare.data.repository.CommentRepositoryImpl
 import com.example.reshare.data.repository.PostRepositoryImpl
+import com.example.reshare.data.repository.UserRepositoryImpl
 import com.example.reshare.domain.repository.AuthRepository
 import com.example.reshare.domain.repository.ChatRepository
 import com.example.reshare.domain.repository.CommentRepository
 import com.example.reshare.domain.repository.PostRepository
+import com.example.reshare.domain.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -122,5 +124,9 @@ object AppModule {
     @Provides
     fun provideCommentRepository(api: AppApi): CommentRepository {
         return CommentRepositoryImpl(api)
+    }
+    @Provides
+    fun provideUserRepository(api: AppApi): UserRepository {
+        return UserRepositoryImpl(api)
     }
 }

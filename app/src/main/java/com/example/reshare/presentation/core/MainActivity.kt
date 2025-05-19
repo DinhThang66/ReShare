@@ -34,6 +34,7 @@ import com.example.reshare.presentation.features.auth.login.LoginScreen
 import com.example.reshare.presentation.features.auth.register.RegisterScreen
 import com.example.reshare.presentation.features.main.MainScreen
 import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailScreen
+import com.example.reshare.presentation.features.mainGraph.community.userProfile.UserProfileScreen
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
 import com.example.reshare.presentation.utils.Screen
@@ -100,6 +101,13 @@ class MainActivity : ComponentActivity() {
                                     onBackPressed = {
                                         navController.popBackStack()
                                     }
+                                )
+                            }
+                            composable(Screen.UserProfile.route + "/{userId}") {backStackEntry ->
+                                val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+                                UserProfileScreen(
+                                    navController = navController,
+                                    userId = userId
                                 )
                             }
                         }

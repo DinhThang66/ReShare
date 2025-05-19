@@ -3,7 +3,7 @@ package com.example.reshare.presentation.features.mainGraph.community
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.domain.usecase.post.GetPostsUseCase
-import com.example.reshare.domain.usecase.post.ToggleLike
+import com.example.reshare.domain.usecase.post.ToggleLikeUseCase
 import com.example.reshare.presentation.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
     private val getPostsUseCase : GetPostsUseCase,
-    private val toggleLike: ToggleLike
+    private val toggleLikeUseCase : ToggleLikeUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommunityState())
@@ -92,7 +92,7 @@ class CommunityViewModel @Inject constructor(
 
     private fun togglePostLike(postId: String) {
         viewModelScope.launch {
-            val result = toggleLike(postId)
+            val result = toggleLikeUseCase(postId)
             if (result is Resource.Success) {
                 result.data?.let { like ->
                     _state.update { currentState ->

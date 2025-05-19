@@ -39,7 +39,7 @@ fun PostEntity.toDomain(): Post {
         id = id,
         content = content,
         images = gson.fromJson(images, object : TypeToken<List<String>>() {}.type),
-        createdBy = gson.fromJson(createdBy, User::class.java),
+        createdBy = gson.fromJson(createdBy, UserDto::class.java).copy(email = "").toDomain(),
         commentsCount = commentsCount,
         likesCount = likesCount,
         likedByCurrentUser = likedByCurrentUser,

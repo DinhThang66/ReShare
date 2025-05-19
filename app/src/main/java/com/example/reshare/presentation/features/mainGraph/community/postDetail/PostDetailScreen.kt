@@ -77,6 +77,7 @@ import com.example.reshare.R
 import com.example.reshare.domain.model.Post
 import com.example.reshare.presentation.features.mainGraph.community.CommunityUiEvent
 import com.example.reshare.presentation.utils.Resource
+import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.formatTimeAgo
 import kotlinx.coroutines.delay
 
@@ -186,6 +187,9 @@ fun PostDetailScreen(
                             onLikeClick = {
                                 viewModel.onEvent(PostDetailUiEvent.ToggleLike(post.id))
                             },
+                            onAvatarClick = {
+                                navController.navigate(Screen.UserProfile.route + "/${it.createdBy.id}")
+                            }
                         )
                     }
                 }
@@ -214,7 +218,10 @@ fun PostDetailScreen(
                                 comment = comment.content,
                                 likes = comment.likes.size,
                                 time = formatTimeAgo(comment.createdAt),
-                                highlight = comment.id == highlightedId
+                                highlight = comment.id == highlightedId,
+                                onAvatarClick = {
+                                    navController.navigate(Screen.UserProfile.route + "/${comment.createdBy.id}")
+                                }
                             )
                         }
                     }
@@ -269,7 +276,8 @@ fun PostHeader(
     likesCount: Int,
     isLiked: Boolean = false,
     onLikeClick: () -> Unit = {},
-    postImage: String? = null
+    postImage: String? = null,
+    onAvatarClick: () -> Unit = {}
 ) {
     // LIKE with press effect
     val interactionSource = remember { MutableInteractionSource() }
@@ -289,7 +297,8 @@ fun PostHeader(
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)
-                .clip(CircleShape),
+                .clip(CircleShape)
+                .clickable(onClick = onAvatarClick),
             contentScale = ContentScale.Crop,
             placeholder = painterResource(R.drawable.user),
             error = painterResource(R.drawable.user)
@@ -379,7 +388,8 @@ fun PostHeader(
 @Composable
 fun CommentItem(
     username: String, avatar: String, comment: String, likes: Int, time: String,
-    highlight: Boolean
+    highlight: Boolean,
+    onAvatarClick: () -> Unit = {}
 ) {
     var showHighlight by remember { mutableStateOf(highlight) }
     // Tự động tắt highlight sau 3 giây
@@ -402,10 +412,12 @@ fun CommentItem(
                 contentDescription = "User Avatar",
                 modifier = Modifier
                     .size(32.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .clickable { onAvatarClick() },
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(R.drawable.user),
                 error = painterResource(R.drawable.user)
+
             )
 
             Spacer(modifier = Modifier.width(8.dp))

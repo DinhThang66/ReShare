@@ -5,7 +5,7 @@ import com.example.reshare.domain.repository.PostRepository
 import com.example.reshare.presentation.utils.Resource
 import javax.inject.Inject
 
-class ToggleLike @Inject constructor(
+class ToggleLikeUseCase @Inject constructor(
     private val repository: PostRepository
 ) {
     suspend operator fun invoke(postId: String): Resource<Like> {

@@ -62,7 +62,8 @@ fun CommunityPostCard(
     likesCount: Int,
     isLiked: Boolean = false,
     onLikeClick: () -> Unit = {},
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onAvatarClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -91,7 +92,8 @@ fun CommunityPostCard(
                         contentDescription = "Avatar",
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(CircleShape),
+                            .clip(CircleShape)
+                            .clickable { onAvatarClick() },
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(R.drawable.user),
                         error = painterResource(R.drawable.user)

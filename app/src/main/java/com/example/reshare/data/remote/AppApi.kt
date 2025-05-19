@@ -10,6 +10,7 @@ import com.example.reshare.data.remote.dto.PostListDto
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.data.remote.dto.RegisterResponse
 import com.example.reshare.data.remote.dto.StreamTokenDto
+import com.example.reshare.data.remote.dto.UserDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -28,7 +29,7 @@ interface AppApi {
     @GET("api/chat/token")
     suspend fun getStreamToken(): Response<StreamTokenDto>
 
-    // Get Post
+    // Post Endpoint
     @GET("api/post")
     suspend fun getPosts(@Query("page") page: Int): PostListDto
     @PUT("api/post/{id}/like")
@@ -36,14 +37,13 @@ interface AppApi {
 
     // Comment Endpoint
     @GET("api/comment/{postId}")
-    suspend fun getCommentsByPost(
-        @Path("postId") postId: String
-    ): Response<CommentsDto>
-
+    suspend fun getCommentsByPost(@Path("postId") postId: String): Response<CommentsDto>
     @POST("api/comment")
-    suspend fun addComment(
-        @Body request: AddCommentRequest
-    ): Response<CommentDto>
+    suspend fun addComment(@Body request: AddCommentRequest): Response<CommentDto>
+
+    // User Endpoint
+    @GET("api/user/{userId}")
+    suspend fun getUser(@Path("userId") userId: String) : Response<UserDto>
 
     companion object {
         const val BASE_URL = "http://192.168.1.146:5000/"

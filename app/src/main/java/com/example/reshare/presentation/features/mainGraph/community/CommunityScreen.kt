@@ -1,5 +1,6 @@
 package com.example.reshare.presentation.features.mainGraph.community
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,7 +61,6 @@ import com.example.reshare.presentation.components.CommunityPostCard
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.categories
 import com.example.reshare.ui.theme.DarkPurple
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
     ExperimentalMaterialApi::class
@@ -168,7 +168,7 @@ fun CommunityScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
                         item {
-                            Text(text = "Lỗi: ${state.error}")
+                            Text(text = "Error: ${state.error}")
                         }
                     }
                 }
@@ -180,25 +180,29 @@ fun CommunityScreen(
                             .background(Color.White),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        items(state.posts) { post -> CommunityPostCard(
-                            username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
-                            avatar = post.createdBy.profilePic,
-                            category = "Spreading The Word",
-                            timeAgo = post.createdAt,
-                            content = post.content,
-                            commentsCount = post.commentsCount,
-                            likesCount = post.likesCount,
-                            isLiked = post.likedByCurrentUser,
-                            onLikeClick = {
-                                viewModel.onEvent(CommunityUiEvent.ToggleLike(post.id))
-                            },
-                            imageUrls = post.images,
-                            onClick = {
-                                //navController.navigate(Screen.PostDetail.route)
-                                navController.currentBackStackEntry?.savedStateHandle?.set("post", post)
-                                navController.navigate(Screen.PostDetail.route)
-                            }
-                        )
+                        items(state.posts) { post ->
+                            CommunityPostCard(
+                                username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
+                                avatar = post.createdBy.profilePic,
+                                category = "Spreading The Word",
+                                timeAgo = post.createdAt,
+                                content = post.content,
+                                commentsCount = post.commentsCount,
+                                likesCount = post.likesCount,
+                                isLiked = post.likedByCurrentUser,
+                                onLikeClick = {
+                                    viewModel.onEvent(CommunityUiEvent.ToggleLike(post.id))
+                                },
+                                imageUrls = post.images,
+                                onClick = {
+                                    //navController.navigate(Screen.PostDetail.route)
+                                 navController.currentBackStackEntry?.savedStateHandle?.set("post", post)
+                                    navController.navigate(Screen.PostDetail.route)
+                                },
+                                onAvatarClick = {
+                                    navController.navigate(Screen.UserProfile.route + "/${post.createdBy.id}")
+                                }
+                            )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
                         if (state.isPaginating && !state.isLastPage) {

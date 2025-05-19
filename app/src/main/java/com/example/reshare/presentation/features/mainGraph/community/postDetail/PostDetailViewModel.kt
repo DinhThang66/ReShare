@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.domain.usecase.comment.AddCommentUseCase
 import com.example.reshare.domain.usecase.comment.GetCommentsByPostUseCase
-import com.example.reshare.domain.usecase.post.ToggleLike
+import com.example.reshare.domain.usecase.post.ToggleLikeUseCase
 import com.example.reshare.presentation.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 class PostDetailViewModel @Inject constructor(
     private val getCommentsByPostUseCase : GetCommentsByPostUseCase,
     private val addCommentUseCase : AddCommentUseCase,
-    private val toggleLike: ToggleLike
+    private val toggleLikeUseCase: ToggleLikeUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(PostDetailState())
     val state: StateFlow<PostDetailState> = _state
@@ -109,16 +109,14 @@ class PostDetailViewModel @Inject constructor(
                     }
                 }
 
-                is Resource.Loading -> {
-                    // Không cần xử lý, vì đã update loading ở đầu hàm rồi
-                }
+                is Resource.Loading -> Unit
             }
         }
     }
 
     private fun togglePostLike(postId: String) {
         viewModelScope.launch {
-            val result = toggleLike(postId)
+            val result = toggleLikeUseCase(postId)
             if (result is Resource.Success) {
                 result.data?.let { like ->
                     _state.update { currentState ->
