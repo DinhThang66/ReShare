@@ -15,5 +15,5 @@
 local.properties
 
 
-app/src/main/java/com/example/reshare/util/ApiConstants.kt
+**/ApiConstants.kt
 
