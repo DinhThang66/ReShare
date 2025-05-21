@@ -11,6 +11,7 @@ import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.data.remote.dto.RegisterResponse
 import com.example.reshare.data.remote.dto.StreamTokenDto
 import com.example.reshare.data.remote.dto.UserDto
+import com.example.reshare.presentation.utils.ApiConstants
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -46,6 +47,6 @@ interface AppApi {
     suspend fun getUser(@Path("userId") userId: String) : Response<UserDto>
 
     companion object {
-        const val BASE_URL = "http://192.168.1.146:5000/"
+        const val BASE_URL = ApiConstants.BASE_URL
     }
 }
