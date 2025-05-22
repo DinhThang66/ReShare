@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.reshare.presentation.features.auth.login.LoginScreen
 import com.example.reshare.presentation.features.auth.register.RegisterScreen
 import com.example.reshare.presentation.features.main.MainScreen
+import com.example.reshare.presentation.features.mainGraph.community.createPost.CreatePostScreen
 import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailScreen
 import com.example.reshare.presentation.features.mainGraph.community.userProfile.UserProfileScreen
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
@@ -109,6 +110,9 @@ class MainActivity : ComponentActivity() {
                                     navController = navController,
                                     userId = userId
                                 )
+                            }
+                            animatedComposableHorizontalSlide(Screen.CreatePost.route) {
+                                CreatePostScreen(navController = navController)
                             }
                         }
                     }

@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.reshare.domain.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -31,8 +33,6 @@ class UserPreferences @Inject constructor(
     val userProfilePic: Flow<String?> = context.dataStore.data.map { it[PROFILE_PIC] }
     val userToken: Flow<String?> = context.dataStore.data.map { it[TOKEN] }
     val streamToken: Flow<String?> = context.dataStore.data.map { it[STREAM_TOKEN] }
-
-
 
     suspend fun saveUser(
         id: String,
@@ -60,5 +60,39 @@ class UserPreferences @Inject constructor(
 
     suspend fun clearUser() {
         context.dataStore.edit { it.clear() }
+    }
+
+    fun getUserFlow(): Flow<User?> {
+        return combine(
+            userId,
+            userFName,
+            userLName,
+            userEmail,
+            userProfilePic,
+            userToken
+        ) { values: Array<Any?> ->
+            val id = values[0] as? String
+            val firstName = values[1] as? String
+            val lastName = values[2] as? String
+            val email = values[3] as? String
+            val profilePic = values[4] as? String
+            val token = values[5] as? String
+            if (
+                id != null &&
+                firstName != null &&
+                lastName != null &&
+                email != null &&
+                profilePic != null &&
+                token != null
+            ) {
+                User(
+                    id = id,
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = email,
+                    profilePic = profilePic,
+                )
+            } else null
+        }
     }
 }

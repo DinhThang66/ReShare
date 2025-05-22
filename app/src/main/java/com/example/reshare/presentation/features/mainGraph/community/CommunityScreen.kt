@@ -1,5 +1,7 @@
 package com.example.reshare.presentation.features.mainGraph.community
 
+import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,7 +26,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -36,6 +40,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -62,6 +67,7 @@ import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.categories
 import com.example.reshare.ui.theme.DarkPurple
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
     ExperimentalMaterialApi::class
 )
@@ -113,199 +119,216 @@ fun CommunityScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pullRefresh(pullRefreshState)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.CreatePost.route) {
+                    launchSingleTop = true
+                } },
+                contentColor = DarkPurple,
+                modifier = Modifier.padding(bottom = 60.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Create Post", tint = Color.White)
+            }
+        },
     ) {
-
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .pullRefresh(pullRefreshState)
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
             ) {
-                Text(
-                    text = "Posts",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Button(
-                    onClick = { showSheet = true },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkPurple),
-                    border = BorderStroke(1.dp, DarkPurple)
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Category")
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Posts
-            when {
-                state.isInitialLoading  -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                    Text(
+                        text = "Posts",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Button(
+                        onClick = { showSheet = true },
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkPurple),
+                        border = BorderStroke(1.dp, DarkPurple)
                     ) {
-                        CircularProgressIndicator()
+                        Text(text = "Category")
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                     }
                 }
-                state.error != null -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ){
-                        item {
-                            Text(text = "Error: ${state.error}")
-                        }
-                    }
-                }
-                else -> {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxSize() // Or .weight(1f)
-                            .background(Color.White),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                    ) {
-                        items(state.posts) { post ->
-                            CommunityPostCard(
-                                username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
-                                avatar = post.createdBy.profilePic,
-                                category = "Spreading The Word",
-                                timeAgo = post.createdAt,
-                                content = post.content,
-                                commentsCount = post.commentsCount,
-                                likesCount = post.likesCount,
-                                isLiked = post.likedByCurrentUser,
-                                onLikeClick = {
-                                    viewModel.onEvent(CommunityUiEvent.ToggleLike(post.id))
-                                },
-                                imageUrls = post.images,
-                                onClick = {
-                                    //navController.navigate(Screen.PostDetail.route)
-                                 navController.currentBackStackEntry?.savedStateHandle?.set("post", post)
-                                    navController.navigate(Screen.PostDetail.route)
-                                },
-                                onAvatarClick = {
-                                    navController.navigate(Screen.UserProfile.route + "/${post.createdBy.id}")
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                        if (state.isPaginating && !state.isLastPage) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                Spacer(modifier = Modifier.height(10.dp))
 
-            // Bottom Sheet
-            if (showSheet) {
-                LaunchedEffect(Unit) {
-                    sheetState.expand()
-                }
-
-                ModalBottomSheet(
-                    onDismissRequest = { showSheet = false },
-                    sheetState = sheetState,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .navigationBarsPadding()
-                    ) {
-                        Text(
-                            text = "Category",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                // Posts
+                when {
+                    state.isInitialLoading  -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            categories.forEach { category ->
-                                val isSelected = selectedCategory == category
-                                Row(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(
-                                            if (isSelected) Color(0xFFF1E7FF)
-                                            else Color.White
-                                        )
-                                        .clickable { selectedCategory = category }
-                                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = if (isSelected) DarkPurple else Color.LightGray,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = category,
-                                        fontSize = 13.sp,
-                                        color = Color.Black,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
+                            CircularProgressIndicator()
+                        }
+                    }
+                    state.error != null -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
+                            item {
+                                Text(text = "Error: ${state.error}")
                             }
                         }
+                    }
+                    else -> {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxSize() // Or .weight(1f)
+                                .background(Color.White),
+                            contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                            items(state.posts) { post ->
+                                CommunityPostCard(
+                                    username = "${post.createdBy.lastName} ${post.createdBy.firstName}",
+                                    avatar = post.createdBy.profilePic,
+                                    category = "Spreading The Word",
+                                    timeAgo = post.createdAt,
+                                    content = post.content,
+                                    commentsCount = post.commentsCount,
+                                    likesCount = post.likesCount,
+                                    isLiked = post.likedByCurrentUser,
+                                    onLikeClick = {
+                                        viewModel.onEvent(CommunityUiEvent.ToggleLike(post.id))
+                                    },
+                                    imageUrls = post.images,
+                                    onClick = {
+                                        //navController.navigate(Screen.PostDetail.route)
+                                        navController.currentBackStackEntry?.savedStateHandle?.set("post", post)
+                                        navController.navigate(Screen.PostDetail.route)
+                                    },
+                                    onAvatarClick = {
+                                        navController.navigate(Screen.UserProfile.route + "/${post.createdBy.id}")
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                            if (state.isPaginating && !state.isLastPage) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            }
+                            if (state.isLastPage) {
+                                item { Box( modifier = Modifier.fillMaxWidth().padding(16.dp)) }
+                            }
+                        }
+                    }
+                }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                // Bottom Sheet
+                if (showSheet) {
+                    LaunchedEffect(Unit) {
+                        sheetState.expand()
+                    }
 
-                        Button(
-                            onClick = {
-                                showSheet = false
-                                // Apply selectedCategory here
-                            },
+                    ModalBottomSheet(
+                        onDismissRequest = { showSheet = false },
+                        sheetState = sheetState,
+                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                    ) {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkPurple)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .navigationBarsPadding()
                         ) {
-                            Text(text = "Apply", color = Color.White)
+                            Text(
+                                text = "Category",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                categories.forEach { category ->
+                                    val isSelected = selectedCategory == category
+                                    Row(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                if (isSelected) Color(0xFFF1E7FF)
+                                                else Color.White
+                                            )
+                                            .clickable { selectedCategory = category }
+                                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = if (isSelected) DarkPurple else Color.LightGray,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = category,
+                                            fontSize = 13.sp,
+                                            color = Color.Black,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Button(
+                                onClick = {
+                                    showSheet = false
+                                    // Apply selectedCategory here
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                shape = RoundedCornerShape(50),
+                                colors = ButtonDefaults.buttonColors(containerColor = DarkPurple)
+                            ) {
+                                Text(text = "Apply", color = Color.White)
+                            }
                         }
                     }
                 }
             }
+
+
+            // Pull-to-refresh indicator
+            PullRefreshIndicator(
+                refreshing = state.isInitialLoading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
-
-
-        // Pull-to-refresh indicator
-        PullRefreshIndicator(
-            refreshing = state.isInitialLoading,
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
 }

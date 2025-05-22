@@ -1,5 +1,6 @@
 package com.example.reshare.data.repository
 
+import android.util.Log
 import coil.network.HttpException
 import com.example.reshare.data.local.post.PostDao
 import com.example.reshare.data.mapper.toDomain
@@ -14,6 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 class PostRepositoryImpl (
@@ -88,6 +92,30 @@ class PostRepositoryImpl (
         return try {
             val likeDto = api.toggleLike(postId)
             Resource.Success(Like(likes = likeDto.likes, liked = likeDto.liked))
+        } catch (e: IOException) {
+            Resource.Error("Network error: ${e.message}")
+        } catch (e: HttpException) {
+            Resource.Error("Server error: ${e.message}")
+        } catch (e: Exception) {
+            Resource.Error("Unexpected error: ${e.message}")
+        }
+    }
+
+    override suspend fun createPost(
+        content: String,
+        images: List<MultipartBody.Part>,
+    ): Resource<Post> {
+        return try {
+            val contentPart = content.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val response = api.createPost(contentPart, images)
+            if (response.isSuccessful && response.body() != null) {
+                val postDto = response.body()!!
+                val post = postDto.toDomain()
+                Resource.Success(post)
+            } else {
+                Resource.Error("Posting failed: ${response.message()}")
+            }
         } catch (e: IOException) {
             Resource.Error("Network error: ${e.message}")
         } catch (e: HttpException) {
