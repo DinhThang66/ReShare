@@ -1,6 +1,14 @@
-package com.example.reshare.presentation.features.mainGraph.home
+@file:Suppress("NAME_SHADOWING")
 
+package com.example.reshare.presentation.features.mainGraph.home.chooseALocation
+
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
+import android.location.LocationManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -41,13 +50,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.example.reshare.domain.model.PlaceSuggestion
 import com.example.reshare.ui.theme.DarkPurple
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.Circle
@@ -55,24 +68,82 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.cos
 
-@SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter",
+    "MissingPermission"
+)
 @Composable
 fun RadiusMapScreen(
     navController: NavController,
-    center: LatLng = LatLng(51.5074, -0.1278), // London
+    viewModel: RadiusMapViewModel = hiltViewModel()
 ) {
-    var radiusMiles by remember { mutableFloatStateOf(12.4f) }
-    val radiusInMeters = radiusMiles * 1609.34f         // Cập nhật động theo Slider
-
+    val state by viewModel.state.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
+    val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+
+    val locationPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            if (!isLocationEnabled) {
+                Toast.makeText(context, "Please enable Location (GPS) in Settings",
+                    Toast.LENGTH_LONG).show()
+                return@rememberLauncherForActivityResult
+            }
+
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(latLng))
+                } else {
+                    viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(LatLng(20.8449, 106.6881))) // fallback
+                }
+            }
+        } else {
+            Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Automatically align display area
-    LaunchedEffect(radiusInMeters) {
-        val bounds = calculateBounds(center, radiusInMeters)
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collectLatest { event ->
+            when (event) {
+                is RadiusMapSideEffect.ShowError ->
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                RadiusMapSideEffect.CloseScreen ->
+                    navController.popBackStack()
+                RadiusMapSideEffect.LocationUpdated -> {
+                    val bounds = calculateBounds(state.selectedLocation, state.radiusMiles * 1609.34f)
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newLatLngBounds(bounds, 50)
+                    )
+                }
+            }
+        }
+    }
+
+    // Initial camera update
+    LaunchedEffect(state.selectedLocation, state.radiusMiles) {
+        val bounds = calculateBounds(state.selectedLocation, state.radiusMiles * 1609.34f)
         cameraPositionState.animate(
-            CameraUpdateFactory.newLatLngBounds(bounds, 50) // padding circle
+            CameraUpdateFactory.newLatLngBounds(bounds, 50)
         )
     }
 
@@ -84,19 +155,26 @@ fun RadiusMapScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
             LocationSelectorHeader(
-                onClose = { navController.popBackStack() }
+                query = state.searchQuery,
+                onQueryChange = { viewModel.onEvent(RadiusMapUiEvent.OnQueryChange(it)) },
+                onClose = { navController.popBackStack() },
+                onUseCurrentLocation = { permissionLauncher.launch(locationPermissions) },
+                searchResults = state.suggestions,
+                onResultClick = { suggestion ->
+                    viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelected(suggestion.placeId))
+                }
             )
             GoogleMap(
                 modifier = Modifier.fillMaxWidth().height(350.dp),
                 cameraPositionState = cameraPositionState
             ) {
                 Marker(
-                    state = MarkerState(position = center),
+                    state = MarkerState(position = state.selectedLocation),
                     title = "Luân Đôn"
                 )
                 Circle(
-                    center = center,
-                    radius = radiusInMeters.toDouble(),
+                    center = state.selectedLocation,
+                    radius = (state.radiusMiles * 1609.34f).toDouble(),
                     fillColor = Color(0x334285F4), // Semi-transparent purple
                     strokeColor = Color(0xFF4285F4),
                     strokeWidth = 2f
@@ -104,9 +182,13 @@ fun RadiusMapScreen(
             }
 
             DistanceSelector(
-                value = radiusMiles,
-                onValueChange = { radiusMiles = it },
-                onApply = {}
+                value = state.radiusMiles,
+                onValueChange = {
+                    viewModel.onEvent(RadiusMapUiEvent.OnRadiusChange(it))
+                },
+                onApply = {
+                    viewModel.onEvent(RadiusMapUiEvent.OnApply)
+                }
             )
         }
     }
@@ -114,8 +196,12 @@ fun RadiusMapScreen(
 
 @Composable
 fun LocationSelectorHeader(
+    query: String,
+    onQueryChange: (String) -> Unit,
     onClose: () -> Unit = {},
-    onUseCurrentLocation: () -> Unit = {}
+    onUseCurrentLocation: () -> Unit = {},
+    searchResults: List<PlaceSuggestion>,
+    onResultClick: (PlaceSuggestion) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -147,8 +233,8 @@ fun LocationSelectorHeader(
 
         // Search bar
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = query,
+            onValueChange = onQueryChange,
             placeholder = { Text("Search here") },
             leadingIcon = {
                 Icon(
@@ -173,25 +259,39 @@ fun LocationSelectorHeader(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Use current location
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onUseCurrentLocation() },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.MyLocation,
-                contentDescription = "Use current location",
-                tint = DarkPurple
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Or use current location",
-                color = DarkPurple,
-                fontWeight = FontWeight.Medium
-            )
+        if (searchResults.isNotEmpty()) {
+            // Optional: hiện danh sách gợi ý
+            Column {
+                searchResults.forEach { item ->
+                    Text(
+                        text = item.description,
+                        modifier = Modifier
+                            .clickable { onResultClick(item) }
+                            .padding(12.dp)
+                    )
+                }
+            }
+        } else {
+            // Use current location
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onUseCurrentLocation() },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = "Use current location",
+                    tint = DarkPurple
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Or use current location",
+                    color = DarkPurple,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

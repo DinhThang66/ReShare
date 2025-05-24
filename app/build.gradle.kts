@@ -7,7 +7,6 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("kotlin-parcelize")
     id("com.google.secrets_gradle_plugin") version "0.6"
-
 }
 
 android {
@@ -44,6 +43,10 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+secrets {
+    defaultPropertiesFileName = "local.properties"
 }
 
 dependencies {
@@ -108,7 +111,6 @@ dependencies {
     // GG map
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation("com.google.maps.android:maps-compose:6.4.1")
-
-
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
 }

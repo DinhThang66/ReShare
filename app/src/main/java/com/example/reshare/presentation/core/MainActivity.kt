@@ -14,17 +14,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
@@ -36,7 +32,7 @@ import com.example.reshare.presentation.features.main.MainScreen
 import com.example.reshare.presentation.features.mainGraph.community.createPost.CreatePostScreen
 import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailScreen
 import com.example.reshare.presentation.features.mainGraph.community.userProfile.UserProfileScreen
-import com.example.reshare.presentation.features.mainGraph.home.RadiusMapScreen
+import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.RadiusMapScreen
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
 import com.example.reshare.presentation.utils.Screen
