@@ -114,11 +114,17 @@ fun UserProfileScreen(
                     }
                 }
                 state.error != null -> {
-                    Text(
-                        text = "Error: ${state.error}",
-                        color = Color.Red,
-                        fontSize = 16.sp
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            text = "Error: ${state.error}",
+                            color = Color.Red,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
                 state.user != null -> {
                     ProfileSection(

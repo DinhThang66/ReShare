@@ -166,6 +166,7 @@ fun PostDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(Color.White)
         ) {
             LazyColumn(
                 state = listState,

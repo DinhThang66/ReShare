@@ -73,6 +73,10 @@ class UserProfileViewModel @Inject constructor(
                 _state.update { it.copy(error = "Current user not found") }
                 return@launch
             }
+            if (myUserId == targetUserId) {
+                _state.update { it.copy(error = "That's you :))") }
+                return@launch
+            }
             val channelId = listOf(myUserId, targetUserId).sorted().joinToString("_")
 
             client.createChannel(

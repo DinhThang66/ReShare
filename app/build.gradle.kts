@@ -6,6 +6,8 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("kotlin-parcelize")
+    id("com.google.secrets_gradle_plugin") version "0.6"
+
 }
 
 android {
@@ -102,4 +104,11 @@ dependencies {
     // Get Stream
     implementation("io.getstream:stream-chat-android-compose:6.15.0")
     implementation("io.getstream:stream-chat-android-offline:6.15.0")
+
+    // GG map
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.maps.android:maps-compose:6.4.1")
+
+
+
 }

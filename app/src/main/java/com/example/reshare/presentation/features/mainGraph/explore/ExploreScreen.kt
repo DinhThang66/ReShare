@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.reshare.presentation.features.mainGraph.explore.listPager.ExploreListPager
+import com.example.reshare.presentation.features.mainGraph.explore.mapPager.ExploreMapPager
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
 import kotlinx.coroutines.launch
@@ -109,13 +110,7 @@ fun ExploreScreen(
         ) {page ->
             when(page) {
                 0 -> ExploreListPager()
-                1 ->  Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(text = "Map")
-                }
+                1 -> ExploreMapPager()
             }
         }
     }
