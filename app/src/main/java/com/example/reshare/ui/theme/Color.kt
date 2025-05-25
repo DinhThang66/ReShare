@@ -24,6 +24,12 @@ val BlueGray = Color(0xFF334155)
 val LightBlueWhile = Color(0xFFF1F5F9)
 val DarkBlue = Color(0xFF1E293B)
 
+val BlueD = Color(0xff25154b)
+val YellowD = Color(0xffffdc01)
+val OrangeM = Color(0xffee5206)
+val MilkM = Color(0xfffcfce4)
+val DarkYellow = Color(0xffeac129)
+
 val ColorScheme.focusedTextFieldText
     @Composable
     get() = if (isSystemInDarkTheme()) Color.White else Color.Black

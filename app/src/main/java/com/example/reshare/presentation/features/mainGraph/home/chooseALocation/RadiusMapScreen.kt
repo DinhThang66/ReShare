@@ -6,6 +6,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.LocationManager
+import android.os.Looper
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,7 +60,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.reshare.domain.model.PlaceSuggestion
 import com.example.reshare.ui.theme.DarkPurple
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -84,10 +89,6 @@ fun RadiusMapScreen(
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    val isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-
     val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION
@@ -108,14 +109,56 @@ fun RadiusMapScreen(
                 return@rememberLauncherForActivityResult
             }
 
+            // Dùng API LocationRequest.Builder mới
+            val locationRequest = LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                10000L // intervalMillis
+            )
+                .setWaitForAccurateLocation(true)
+                .setMinUpdateIntervalMillis(5000L)
+                .setMaxUpdateDelayMillis(15000L)
+                .setMaxUpdates(1)
+                .build()
+
+            val locationCallback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    val location = result.lastLocation
+                    if (location != null) {
+                        val latLng = LatLng(location.latitude, location.longitude)
+                        viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(latLng))
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Still unable to get current location",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(state.selectedLocation)) // fallback
+                    }
+                    fusedLocationClient.removeLocationUpdates(this)
+                }
+            }
+
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            )
+
+            /*
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     val latLng = LatLng(location.latitude, location.longitude)
                     viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(latLng))
                 } else {
-                    viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(LatLng(20.8449, 106.6881))) // fallback
+                    Toast.makeText(
+                        context,
+                        "Unable to get current location",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(state.selectedLocation)) // fallback
                 }
             }
+             */
         } else {
             Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
         }
