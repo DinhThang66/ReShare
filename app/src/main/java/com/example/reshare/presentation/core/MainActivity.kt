@@ -34,6 +34,7 @@ import com.example.reshare.presentation.features.mainGraph.community.postDetail.
 import com.example.reshare.presentation.features.mainGraph.community.userProfile.UserProfileScreen
 import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.RadiusMapScreen
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
+import com.example.reshare.presentation.features.mainGraph.home.makeARequest.MakeRequestScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.ui.theme.ReShareTheme
@@ -113,6 +114,9 @@ class MainActivity : ComponentActivity() {
                             }
                             animatedComposableVerticalSlide(Screen.RadiusMap.route) {
                                 RadiusMapScreen(navController = navController)
+                            }
+                            animatedComposableHorizontalSlide(Screen.MakeARequest.route) {
+                                MakeRequestScreen(navController = navController)
                             }
                         }
                     }

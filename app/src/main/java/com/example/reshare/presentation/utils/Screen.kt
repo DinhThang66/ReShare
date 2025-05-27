@@ -15,4 +15,5 @@ sealed class Screen(var route: String) {
     data object UserProfile: Screen("userProfile")
     data object CreatePost: Screen("createPost")
     data object RadiusMap: Screen("radiusMap")
+    data object MakeARequest: Screen("makeARequest")
 }

@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.reshare.R
+import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.ui.theme.BlueD
 import com.example.reshare.ui.theme.DarkGreen
 import com.example.reshare.ui.theme.DarkPurple
@@ -134,14 +135,14 @@ fun ItemDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             LocationMapSection(
-                location = LatLng(51.5014, -0.1419),
+                location = LatLng(20.8449, 106.6881),
                 distanceText = "1.1 km away",
                 radiusMeters = 300.0
             )
 
             Spacer(modifier = Modifier.height(20.dp))
             Button(
-                onClick = {},
+                onClick = { navController.navigate(Screen.MakeARequest.route) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)

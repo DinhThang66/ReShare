@@ -29,6 +29,7 @@ val YellowD = Color(0xffffdc01)
 val OrangeM = Color(0xffee5206)
 val MilkM = Color(0xfffcfce4)
 val DarkYellow = Color(0xffeac129)
+val Pink = Color(0xfffa4a6b)
 
 val ColorScheme.focusedTextFieldText
     @Composable

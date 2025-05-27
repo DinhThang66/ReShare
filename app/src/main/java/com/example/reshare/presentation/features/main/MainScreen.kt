@@ -1,6 +1,7 @@
 package com.example.reshare.presentation.features.main
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -111,6 +113,7 @@ fun MainScreen(
                 modifier = Modifier.fillMaxHeight()
                     .verticalScroll(rememberScrollState())
                     .width(screenWidth * 0.8f),
+                drawerContainerColor = Color.White
             ) {
 
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -139,7 +142,7 @@ fun MainScreen(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    DrawerItem(icon = Icons.Default.Home, title = "Home")
+                    DrawerItem(icon = Icons.Default.Home, title = "Home", active = true)
                     DrawerItem(icon = Icons.Default.AccountCircle, title = "My Impact")
                     DrawerItem(icon = Icons.Default.Verified, title = "My Badges")
                     DrawerItem(icon = Icons.Default.EmojiEvents, title = "My Levels")
@@ -207,15 +210,26 @@ fun MainScreen(
 }
 
 @Composable
-fun DrawerItem(icon: ImageVector, title: String) {
+fun DrawerItem(icon: ImageVector, title: String, active: Boolean = false) {
     Row(
         modifier = Modifier
-            .padding(vertical = 12.dp)
-            .clickable { /* Handle click */ },
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { /* Handle click */ }
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (active) Color(0xFFEC4899) else Color.Black
+        )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(title, fontSize = 16.sp)
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (active) Color(0xFFEC4899) else Color.Black
+        )
     }
 }

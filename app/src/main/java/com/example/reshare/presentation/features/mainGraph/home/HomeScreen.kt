@@ -77,7 +77,7 @@ fun HomeScreen(
                 )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
-                    text = "Victoria Street",
+                    text = "Hải Phòng",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
@@ -91,7 +91,7 @@ fun HomeScreen(
                 )
             }
             Text(
-                text = "Listings within 20km",
+                text = "Listings within 10km",
                 fontWeight = FontWeight.Light,
                 fontSize = 12.sp,
                 color = Color.Black,
