@@ -1,6 +1,7 @@
 package com.example.reshare.data.remote
 
 import com.example.reshare.data.remote.dto.AddCommentRequest
+import com.example.reshare.data.remote.dto.CategorizedProductDto
 import com.example.reshare.data.remote.dto.CommentDto
 import com.example.reshare.data.remote.dto.CommentsDto
 import com.example.reshare.data.remote.dto.LikeResponseDto
@@ -28,10 +29,8 @@ import retrofit2.http.Query
 interface AppApi {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
-
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
-
     @GET("api/chat/token")
     suspend fun getStreamToken(): Response<StreamTokenDto>
 
@@ -56,6 +55,10 @@ interface AppApi {
     // User Endpoint
     @GET("api/user/{userId}")
     suspend fun getUser(@Path("userId") userId: String) : Response<UserDto>
+
+    // Product Endpoint
+    @GET("api/product/categorized")
+    suspend fun getCategorizedProducts(): CategorizedProductDto
 
     companion object {
         const val BASE_URL = ApiConstants.BASE_URL

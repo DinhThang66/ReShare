@@ -1,11 +1,16 @@
 package com.example.reshare.data.mapper
 
 import com.example.reshare.data.local.post.PostEntity
+import com.example.reshare.data.local.product.ProductEntity
+import com.example.reshare.data.remote.dto.CategorizedProductDto
 import com.example.reshare.data.remote.dto.CommentDto
 import com.example.reshare.data.remote.dto.PostDto
+import com.example.reshare.data.remote.dto.ProductDto
 import com.example.reshare.data.remote.dto.UserDto
+import com.example.reshare.domain.model.CategorizedProducts
 import com.example.reshare.domain.model.Comment
 import com.example.reshare.domain.model.Post
+import com.example.reshare.domain.model.Product
 import com.example.reshare.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -71,5 +76,91 @@ fun CommentDto.toDomain(): Comment {
         likes = likes,
         createdAt = createdAt,
         updatedAt = updatedAt,
+    )
+}
+
+fun ProductEntity.toDomain(): Product {
+    val gson = Gson()
+    return Product(
+        id = id,
+        title = title,
+        description = description,
+        images = gson.fromJson(images, object : TypeToken<List<String>>() {}.type),
+
+        pickupTimes = pickupTimes,
+        pickupInstructions = pickupInstructions,
+
+        locationLat = locationLat,
+        locationLng = locationLng,
+
+        tag = tag,
+        type = type,
+        quantity = quantity,
+
+        originalPrice = originalPrice,
+        discountPercent = discountPercent,
+        storeInfo = storeInfo,
+        createdBy = gson.fromJson(createdBy, UserDto::class.java).copy(email = "").toDomain(),
+        updatedAt = updatedAt
+    )
+}
+fun ProductDto.toEntity(): ProductEntity {
+    val gson = Gson()
+    return ProductEntity(
+        id = _id,
+        title = title,
+        description = description,
+        images = gson.toJson(images),
+
+        pickupTimes = pickupTimes,
+        pickupInstructions = pickupInstructions,
+
+        locationLat = location.coordinates[1],
+        locationLng = location.coordinates[0],
+
+        tag = type,
+        type = productType,
+        quantity = quantity,
+
+        originalPrice = originalPrice,
+        discountPercent =  discountPercent,
+        storeInfo = storeInfo,
+
+        createdBy = gson.toJson(createdBy),
+        updatedAt = updatedAt
+    )
+}
+fun ProductDto.toDomain(): Product {
+    return Product(
+        id = _id,
+        title = title,
+        description = description,
+        images = images,
+
+        pickupTimes = pickupTimes,
+        pickupInstructions = pickupInstructions,
+
+        locationLat = location.coordinates[1],
+        locationLng = location.coordinates[0],
+
+        tag = type,
+        type = productType,
+        quantity = quantity,
+
+        originalPrice = originalPrice,
+        discountPercent =  discountPercent,
+        storeInfo = storeInfo,
+
+        createdBy = createdBy.copy(email = "").toDomain(),
+        updatedAt = updatedAt
+    )
+}
+
+fun CategorizedProductDto.toDomain(): CategorizedProducts {
+    return CategorizedProducts(
+        freeFood = freeFood.map { it.toDomain() },
+        nonFood = nonFood.map { it.toDomain() },
+        reducedFood = reducedFood.map { it.toDomain() },
+        want = want.map { it.toDomain() }
     )
 }

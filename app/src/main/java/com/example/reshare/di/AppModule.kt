@@ -5,17 +5,20 @@ import androidx.room.Room
 import com.example.reshare.data.local.AppDatabase
 import com.example.reshare.data.local.UserPreferences
 import com.example.reshare.data.local.post.PostDao
+import com.example.reshare.data.local.product.ProductDao
 import com.example.reshare.data.remote.AppApi
 import com.example.reshare.data.remote.interceptor.AuthInterceptor
 import com.example.reshare.data.repository.AuthRepositoryImpl
 import com.example.reshare.data.repository.ChatRepositoryImpl
 import com.example.reshare.data.repository.CommentRepositoryImpl
 import com.example.reshare.data.repository.PostRepositoryImpl
+import com.example.reshare.data.repository.ProductRepositoryImpl
 import com.example.reshare.data.repository.UserRepositoryImpl
 import com.example.reshare.domain.repository.AuthRepository
 import com.example.reshare.domain.repository.ChatRepository
 import com.example.reshare.domain.repository.CommentRepository
 import com.example.reshare.domain.repository.PostRepository
+import com.example.reshare.domain.repository.ProductRepository
 import com.example.reshare.domain.repository.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -100,11 +103,15 @@ object AppModule {
         ).fallbackToDestructiveMigration().build()
     }
 
-
     @Provides
     @Singleton
     fun providePostDao(appDatabase: AppDatabase): PostDao {
         return appDatabase.postDao
+    }
+    @Provides
+    @Singleton
+    fun provideProductDao(appDatabase: AppDatabase): ProductDao {
+        return appDatabase.productDao
     }
 
 
@@ -128,5 +135,9 @@ object AppModule {
     @Provides
     fun provideUserRepository(api: AppApi): UserRepository {
         return UserRepositoryImpl(api)
+    }
+    @Provides
+    fun provideProductRepository(api: AppApi, dao: ProductDao): ProductRepository {
+        return ProductRepositoryImpl(api, dao)
     }
 }

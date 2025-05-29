@@ -33,17 +33,27 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.reshare.R
+import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.utils.Screen
+import com.example.reshare.presentation.utils.capitalizeFirst
+import com.example.reshare.ui.theme.BlueD
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
+import com.example.reshare.ui.theme.MilkM
+import com.example.reshare.ui.theme.OrangeM
+import com.example.reshare.ui.theme.YellowD
 
 @Composable
 fun HomeItemCard(
     modifier: Modifier = Modifier,
+    product: Product,
     navController: NavController
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -53,6 +63,7 @@ fun HomeItemCard(
         modifier = Modifier
             .width(cardWidth)
             .clickable {
+                navController.currentBackStackEntry?.savedStateHandle?.set("product", product)
                 navController.navigate(Screen.ItemDetail.route)
             },
         shape = RoundedCornerShape(12.dp),
@@ -61,13 +72,15 @@ fun HomeItemCard(
     ) {
         Column {
             Box {
-                Image(
-                    painter = painterResource(R.drawable.img_1), // Thay bằng ảnh thật
+                AsyncImage(
+                    model = product.images[0],
                     contentDescription = "Product Image",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(110.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.img),
+                    error = painterResource(R.drawable.img)
                 )
                 Row(
                     modifier = Modifier
@@ -75,7 +88,7 @@ fun HomeItemCard(
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Badge("Free")
+                    Badge(product.tag, product.originalPrice)
                     Box {
                         Box(
                             modifier = Modifier
@@ -100,25 +113,61 @@ fun HomeItemCard(
             }
 
             Text(
-                text = "Maldon salt flakes",
+                text = product.title,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
                 modifier = Modifier.padding(horizontal = 8.dp)
-                    .padding(top = 10.dp)
+                    .padding(top = 10.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-            UserInfo("Viviana", R.drawable.img)
+            if (product.tag.lowercase() == "reduced" && product.originalPrice != null && product.discountPercent != null) {
+                ReducedPriceSection(
+                    originalPrice = product.originalPrice,
+                    discountPercent = product.discountPercent,
+                    discountedPrice = product.originalPrice * (1 - product.discountPercent / 100.0)
+                )
+            }
+            UserInfo(product.createdBy.firstName, product.createdBy.profilePic)
         }
     }
 }
 
+
+data class BadgeStyle(
+    val backgroundColor: Color,
+    val textColor: Color
+)
+object BadgeStyles {
+    val Free = BadgeStyle(LightPurple, DarkPurple)
+    val Wanted = BadgeStyle(MilkM, OrangeM)
+    val Paid = BadgeStyle(Color.Black.copy(0.6f), Color.White)
+    val Reduced = BadgeStyle(YellowD, BlueD)
+}
+
+fun getBadgeStyle(tag: String): BadgeStyle {
+    return when (tag.lowercase()) {
+        "free" -> BadgeStyles.Free
+        "wanted" -> BadgeStyles.Wanted
+        "paid" -> BadgeStyles.Paid
+        "reduced" -> BadgeStyles.Reduced
+        else -> BadgeStyles.Free
+    }
+}
 @Composable
-fun Badge(text: String) {
+fun Badge(tag: String, originalPrice: Double? = null) {
+    val style = getBadgeStyle(tag)
+
     Box(
         modifier = Modifier
-            .background(LightPurple, shape = CircleShape)
+            .background(style.backgroundColor, shape = CircleShape)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
-        Text(text, color = DarkPurple, fontSize = 12.sp, style = TextStyle(lineHeight = 12.sp))
+        if(tag == "paid")
+            Text("%.1fk".format(originalPrice),
+                color = style.textColor, fontSize = 12.sp, style = TextStyle(lineHeight = 12.sp))
+        else
+            Text(tag.capitalizeFirst(), color = style.textColor, fontSize = 12.sp, style = TextStyle(lineHeight = 12.sp))
     }
 }
 
@@ -154,20 +203,61 @@ fun LocationTag(distance: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun UserInfo(name: String, profilePic: Int) {
+fun UserInfo(name: String, avatar: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(8.dp)
     ) {
-        Image(
-            painter = painterResource(profilePic),
+        AsyncImage(
+            model = avatar,
             contentDescription = "User Avatar",
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(R.drawable.user),
+            error = painterResource(R.drawable.user)
         )
-        Text(text = name, fontSize = 14.sp, modifier = Modifier.padding(start = 8.dp))
+        Text(
+            text = name, fontSize = 14.sp,
+            modifier = Modifier.padding(start = 8.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun ReducedPriceSection(
+    originalPrice: Double,
+    discountPercent: Int,
+    discountedPrice: Double
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "%.1fk".format(originalPrice),
+            fontSize = 12.sp,
+            color = Color.Gray,
+            textDecoration = TextDecoration.LineThrough
+        )
+        Text(
+            text = "%.1fk".format(discountedPrice),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        Text(
+            text = "-$discountPercent%",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF009688)
+        )
     }
 }
 

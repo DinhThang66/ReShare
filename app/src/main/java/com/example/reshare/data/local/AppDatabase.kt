@@ -5,10 +5,16 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.reshare.data.local.post.PostDao
 import com.example.reshare.data.local.post.PostEntity
-import com.example.reshare.data.local.post.PostTypeConverters
+import com.example.reshare.data.local.product.ProductDao
+import com.example.reshare.data.local.product.ProductEntity
 
-@Database(entities = [PostEntity::class], version = 2, exportSchema = false)
-@TypeConverters(PostTypeConverters::class)
+@Database(
+    entities = [PostEntity::class, ProductEntity::class],
+    version = 4,
+    exportSchema = false
+)
+@TypeConverters(AppTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract val postDao: PostDao
+    abstract val productDao: ProductDao
 }

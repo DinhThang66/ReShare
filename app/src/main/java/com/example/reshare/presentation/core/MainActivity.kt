@@ -36,6 +36,10 @@ import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
 import com.example.reshare.presentation.features.mainGraph.home.makeARequest.MakeRequestScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
+import com.example.reshare.presentation.features.sideBar.MyImpactScreen
+import com.example.reshare.presentation.features.sideBar.MyListingsScreen
+import com.example.reshare.presentation.features.sideBar.MyProfileScreen
+import com.example.reshare.presentation.features.sideBar.MyWatchListScreen
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.ui.theme.ReShareTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -117,6 +121,19 @@ class MainActivity : ComponentActivity() {
                             }
                             animatedComposableHorizontalSlide(Screen.MakeARequest.route) {
                                 MakeRequestScreen(navController = navController)
+                            }
+
+                            composable(Screen.MyImpactScreen.route) {
+                                MyImpactScreen()
+                            }
+                            composable(Screen.MyWatchlistScreen.route) {
+                                MyWatchListScreen()
+                            }
+                            composable(Screen.MyListingsScreen.route) {
+                                MyListingsScreen()
+                            }
+                            composable(Screen.MyProfileScreen.route) {
+                                MyProfileScreen()
                             }
                         }
                     }

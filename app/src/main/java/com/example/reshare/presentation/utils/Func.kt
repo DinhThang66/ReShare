@@ -50,3 +50,6 @@ fun formatTimeAgo(isoTime: String): String {
         isoTime // fallback nếu lỗi
     }
 }
+
+fun String.capitalizeFirst(): String =
+    this.replaceFirstChar { it.uppercase() }

@@ -7,22 +7,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -30,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,8 +40,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.components.HomeItemCard
+import com.example.reshare.presentation.features.mainGraph.community.CommunityViewModel
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.sectionTitles
 import com.example.reshare.ui.theme.LightPurple
@@ -50,8 +53,12 @@ import com.example.reshare.ui.theme.LightPurple
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,46 +66,13 @@ fun HomeScreen(
             .padding(innerPadding)
     ) {
         // Location on
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(LightPurple)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 10.dp)
-                .clickable { navController.navigate(Screen.RadiusMap.route) },
-            horizontalAlignment = Alignment.Start
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = "Location",
-                    tint = Color.Black,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(
-                    text = "Hải Phòng",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = "Dropdown",
-                    tint = Color.Black,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            Text(
-                text = "Listings within 10km",
-                fontWeight = FontWeight.Light,
-                fontSize = 12.sp,
-                color = Color.Black,
-                modifier = Modifier
-                    .padding(start = 18.dp)
-                    .offset(y = (-4).dp)
-            )
+        LocationOn(navController = navController)
+
+        // Loading
+        if (state.isLoading) {
+           CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp)
+           )
         }
 
         // LazyColumn
@@ -108,20 +82,100 @@ fun HomeScreen(
                 .background(Color.White),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            items(sectionTitles.size) { index ->
-                Section(
-                    title = sectionTitles[index],
-                    navController = navController
-                )
+            if (state.freeFood.isNotEmpty()) {
+                item {
+                    Section(
+                        title = "New Food Free",
+                        products = state.freeFood,
+                        navController = navController
+                    )
+                }
+            }
+
+            if (state.nonFood.isNotEmpty()) {
+                item {
+                    Section(
+                        title = "New non-food listings",
+                        products = state.nonFood,
+                        navController = navController
+                    )
+                }
+            }
+
+            if (state.reducedFood.isNotEmpty()) {
+                item {
+                    Section(
+                        title = "🔥 New reduced food near you",
+                        products = state.reducedFood,
+                        navController = navController
+                    )
+                }
+            }
+
+            if (state.want.isNotEmpty()) {
+                item {
+                    Section(
+                        title = "🎯 Help a neighbour",
+                        products = state.want,
+                        navController = navController
+                    )
+                }
             }
         }
     }
 }
 
+@Composable
+fun LocationOn(
+    navController: NavHostController,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(LightPurple)
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 10.dp)
+            .clickable { navController.navigate(Screen.RadiusMap.route) },
+        horizontalAlignment = Alignment.Start
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.LocationOn,
+                contentDescription = "Location",
+                tint = Color.Black,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = "Hải Phòng",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Icon(
+                imageVector = Icons.Outlined.KeyboardArrowDown,
+                contentDescription = "Dropdown",
+                tint = Color.Black,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        Text(
+            text = "Listings within 10km",
+            fontWeight = FontWeight.Light,
+            fontSize = 12.sp,
+            color = Color.Black,
+            modifier = Modifier
+                .padding(start = 18.dp)
+                .offset(y = (-4).dp)
+        )
+    }
+}
 
 @Composable
 fun Section(
     title: String,
+    products: List<Product>,
     navController: NavHostController
 ) {
     Column {
@@ -155,8 +209,11 @@ fun Section(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp)
         ) {
-            items(3) {
-                HomeItemCard(navController = navController)
+            items(products) { product ->
+                HomeItemCard(
+                    product = product,
+                    navController = navController
+                )
             }
         }
     }

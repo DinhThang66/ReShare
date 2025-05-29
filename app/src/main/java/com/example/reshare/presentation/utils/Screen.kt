@@ -1,19 +1,25 @@
 package com.example.reshare.presentation.utils
 
 sealed class Screen(var route: String) {
-    data object  Main: Screen("main")
+    data object  Main: Screen("Main")
 
-    data object Home: Screen("home")
-    data object Explore: Screen("explore")
-    data object Community: Screen("community")
-    data object Messages: Screen("messages")
-    data object PostDetail: Screen("postDetail")
+    data object Home: Screen("Home")
+    data object Explore: Screen("Explore")
+    data object Community: Screen("Community")
+    data object Messages: Screen("Messages")
+    data object PostDetail: Screen("PostDetail")
 
-    data object Login: Screen("login")
-    data object Register: Screen("register")
-    data object ItemDetail: Screen("itemDetail")
-    data object UserProfile: Screen("userProfile")
-    data object CreatePost: Screen("createPost")
-    data object RadiusMap: Screen("radiusMap")
-    data object MakeARequest: Screen("makeARequest")
+    data object Login: Screen("Login")
+    data object Register: Screen("Register")
+    data object ItemDetail: Screen("ItemDetail")
+    data object UserProfile: Screen("UserProfile")
+    data object CreatePost: Screen("CreatePost")
+    data object RadiusMap: Screen("RadiusMap")
+    data object MakeARequest: Screen("MakeARequest")
+
+    data object MyImpactScreen: Screen("MyImpact")
+    data object MyWatchlistScreen: Screen("MyWatchlist")
+    data object MyListingsScreen: Screen("MyListings")
+    data object MyProfileScreen: Screen("MyProfile")
+
 }

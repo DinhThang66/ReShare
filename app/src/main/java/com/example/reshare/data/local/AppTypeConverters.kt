@@ -1,11 +1,11 @@
-package com.example.reshare.data.local.post
+package com.example.reshare.data.local
 
 import androidx.room.TypeConverter
 import com.example.reshare.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-class PostTypeConverters {
+class AppTypeConverters {
     private val gson = Gson()
 
     @TypeConverter

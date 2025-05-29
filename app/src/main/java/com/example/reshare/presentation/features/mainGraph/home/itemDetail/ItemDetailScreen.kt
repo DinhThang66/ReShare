@@ -41,6 +41,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,11 +59,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.reshare.R
+import com.example.reshare.domain.model.Post
+import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.utils.Screen
+import com.example.reshare.presentation.utils.formatTimeAgo
 import com.example.reshare.ui.theme.BlueD
 import com.example.reshare.ui.theme.DarkGreen
 import com.example.reshare.ui.theme.DarkPurple
@@ -83,14 +91,30 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 fun ItemDetailScreen(
     navController: NavController,
+    viewModel: ItemDetailViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+    val product = state.product
+
+    // Set product
+    LaunchedEffect(Unit) {
+        val savedProduct = navController.previousBackStackEntry
+            ?.savedStateHandle
+            ?.get<Product>("product")
+        savedProduct?.let {
+            viewModel.onEvent(ItemDetailUiEvent.SetProduct(it))
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Potato, carrot & swede mash",
-                        fontWeight = FontWeight.SemiBold
+                        text = product?.title?:"",
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -110,35 +134,38 @@ fun ItemDetailScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            ImageWithBadge(
-                imageResId = R.drawable.img,
-                badge = BadgeType.Wanted
-            )
-            ImageActionRow(onWatchlistClick = {})
+            product?.let {
+                ImageWithBadge(
+                    image = product.images[0],
+                    tag = it.tag
+                )
+                ImageActionRow(onWatchlistClick = {})
 
-            PostHeaderInfo(
-                avatarRes = R.drawable.img,
-                rating = "4.7",
-                giverName = "Carol",
-                title = "Potato, carrot & swede mash",
-                timeAgo = "7 minutes ago",
-                roleLabel = "Volunteer",
-                roleColor = Color(0xFF6A1B9A),
-                description = "I would appreciate if can get a/some BriaMax water fitter(s) for my jug."
-            )
+                PostHeaderInfo(
+                    avatar = it.createdBy.profilePic,
+                    rating = "5.0",
+                    userName = it.createdBy.firstName,
+                    title = it.title,
+                    timeAgo = formatTimeAgo(it.updatedAt),
+                    roleLabel = "Personal",
+                    roleColor = Color(0xFF6A1B9A),
+                    description = it.description,
+                    tag = it.tag
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                PickupInfoSection(
+                    pickupTimes = it.pickupTimes,
+                    pickupInstructions = it.pickupInstructions
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
-            PickupInfoSection(
-                pickupTimes = "Pick up by 7pm today or 10 to 12pm tomorrow.",
-                pickupInstructions = "Please message your pick up time"
-            )
+                Spacer(modifier = Modifier.height(16.dp))
+                LocationMapSection(
+                    location = LatLng(it.locationLat, it.locationLng),
+                    distanceText = "1.1 km away",
+                    radiusMeters = 300.0
+                )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            LocationMapSection(
-                location = LatLng(20.8449, 106.6881),
-                distanceText = "1.1 km away",
-                radiusMeters = 300.0
-            )
 
             Spacer(modifier = Modifier.height(20.dp))
             Button(
@@ -182,17 +209,26 @@ object BadgeType {
 
 @Composable
 fun ImageWithBadge(
-    imageResId: Int,
-    badge: BadgeStyle = BadgeType.New
+    image: String,
+    tag: String
 ) {
+    val badge = when(tag) {
+        "free" -> BadgeType.New
+        "reduced" -> BadgeType.Reduced
+        "wanted" -> BadgeType.Wanted
+        else -> BadgeType.New
+    }
+
     Box(modifier = Modifier.fillMaxWidth()) {
-        Image(
-            painter = painterResource(id = imageResId),
+        AsyncImage(
+            model = image,
             contentDescription = "Product image",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(R.drawable.img),
+            error = painterResource(R.drawable.img)
         )
 
         Text(
@@ -255,14 +291,15 @@ fun IconWithLabel(
 
 @Composable
 fun PostHeaderInfo(
-    avatarRes: Int,
+    avatar: String,
     rating: String,
-    giverName: String,
+    userName: String,
     title: String,
     timeAgo: String,
     roleLabel: String,
     roleColor: Color,
-    description: String
+    description: String,
+    tag: String
 ) {
     Row(
         modifier = Modifier
@@ -273,14 +310,16 @@ fun PostHeaderInfo(
         Box(modifier = Modifier
             .size(48.dp)
             .offset(y = (-10).dp)) {
-            Image(
-                painter = painterResource(id = avatarRes),
+            AsyncImage(
+                model = avatar,
                 contentDescription = "Avatar",
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(Color.LightGray),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.user),
+                error = painterResource(R.drawable.user)
             )
 
             // Rating badge
@@ -303,10 +342,17 @@ fun PostHeaderInfo(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "$giverName is giving away",
-                fontSize = 14.sp
-            )
+            if (tag == "free") {
+                Text(
+                    text = "$userName is giving away",
+                    fontSize = 14.sp
+                )
+            }else if(tag == "paid") {
+                Text(
+                    text = "$userName is selling",
+                    fontSize = 14.sp
+                )
+            }
             Text(
                 text = title,
                 fontSize = 24.sp,
@@ -347,7 +393,7 @@ fun PostHeaderInfo(
 @Composable
 fun PickupInfoSection(
     pickupTimes: String,
-    pickupInstructions: String
+    pickupInstructions: String?
 ) {
     Column(modifier = Modifier
         .fillMaxWidth()
@@ -369,11 +415,13 @@ fun PickupInfoSection(
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         )
-        Text(
-            text = pickupInstructions,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
-        )
+        if(!pickupInstructions.isNullOrBlank()) {
+            Text(
+                text = pickupInstructions,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
+            )
+        }
     }
 }
 
