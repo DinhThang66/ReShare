@@ -3,6 +3,7 @@ package com.example.reshare.presentation.features.mainGraph.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,10 +18,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,12 +49,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.components.HomeItemCard
+import com.example.reshare.presentation.features.mainGraph.community.CommunityUiEvent
 import com.example.reshare.presentation.features.mainGraph.community.CommunityViewModel
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.sectionTitles
 import com.example.reshare.ui.theme.LightPurple
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
@@ -57,73 +63,93 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state.isLoading,
+        onRefresh = { viewModel.onEvent(HomeUiEvent.Refresh) }
+    )
 
-
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(innerPadding)
+            .pullRefresh(pullRefreshState)
     ) {
-        // Location on
-        LocationOn(navController = navController)
-
-        // Loading
-        if (state.isLoading) {
-           CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp)
-           )
-        }
-
-        // LazyColumn
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize() // Or .weight(1f)
-                .background(Color.White),
-            contentPadding = PaddingValues(bottom = 16.dp)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(innerPadding)
         ) {
-            if (state.freeFood.isNotEmpty()) {
-                item {
-                    Section(
-                        title = "New Food Free",
-                        products = state.freeFood,
-                        navController = navController
-                    )
-                }
+            // Location on
+            LocationOn(navController = navController)
+
+            // Loading
+            if (state.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp)
+                )
             }
 
-            if (state.nonFood.isNotEmpty()) {
-                item {
-                    Section(
-                        title = "New non-food listings",
-                        products = state.nonFood,
-                        navController = navController
-                    )
+            // LazyColumn
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize() // Or .weight(1f)
+                    .background(Color.White),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                if (state.freeFood.isNotEmpty()) {
+                    item {
+                        Section(
+                            title = "New Food Free",
+                            products = state.freeFood,
+                            navController = navController
+                        )
+                    }
                 }
-            }
 
-            if (state.reducedFood.isNotEmpty()) {
-                item {
-                    Section(
-                        title = "🔥 New reduced food near you",
-                        products = state.reducedFood,
-                        navController = navController
-                    )
+                if (state.nonFood.isNotEmpty()) {
+                    item {
+                        Section(
+                            title = "New non-food listings",
+                            products = state.nonFood,
+                            navController = navController
+                        )
+                    }
                 }
-            }
 
-            if (state.want.isNotEmpty()) {
-                item {
-                    Section(
-                        title = "🎯 Help a neighbour",
-                        products = state.want,
-                        navController = navController
-                    )
+                if (state.reducedFood.isNotEmpty()) {
+                    item {
+                        Section(
+                            title = "🔥 New reduced food near you",
+                            products = state.reducedFood,
+                            navController = navController
+                        )
+                    }
+                }
+
+                if (state.want.isNotEmpty()) {
+                    item {
+                        Section(
+                            title = "🎯 Help a neighbour",
+                            products = state.want,
+                            navController = navController
+                        )
+                    }
                 }
             }
         }
+
+        // Pull-to-refresh indicator
+        PullRefreshIndicator(
+            refreshing = state.isLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
+
+
+
+
 
 @Composable
 fun LocationOn(
