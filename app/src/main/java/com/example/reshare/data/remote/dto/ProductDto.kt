@@ -8,6 +8,7 @@ data class ProductDto(
     val pickupTimes: String,
     val pickupInstructions: String? = null,
     val location: Location,
+    val distance: Double,
     val type: String,  // "free", "paid", "reduced", "want"
     val productType: String,    // "food", "non-food"
     val quantity: Int,
@@ -29,4 +30,8 @@ data class CategorizedProductDto(
     val nonFood: List<ProductDto>,
     val reducedFood: List<ProductDto>,
     val want: List<ProductDto>
+)
+
+data class ProductListDto(
+    val products: List<ProductDto>
 )

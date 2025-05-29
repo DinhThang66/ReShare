@@ -6,7 +6,7 @@ import com.google.android.gms.maps.model.LatLng
 data class RadiusMapState(
     val searchQuery: String = "",
     val suggestions: List<PlaceSuggestion> = emptyList(),
-    val selectedLocation: LatLng = LatLng(20.8449, 106.6881),
-    val radiusMiles: Float = 12.4f,
+    val selectedLocation: LatLng = LatLng(21.005403, 105.843048),
+    val radiusMiles: Float = 3f,
     val isLoading: Boolean = false
 )

@@ -1,7 +1,8 @@
 package com.example.reshare.presentation.components
 
-import androidx.compose.foundation.Image
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,31 +33,32 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.reshare.R
-import com.example.reshare.ui.theme.DarkGreen
-import com.example.reshare.ui.theme.DarkPurple
-import com.example.reshare.ui.theme.LightGreen
-import com.example.reshare.ui.theme.LightPurple
+import com.example.reshare.domain.model.Product
+import com.example.reshare.presentation.utils.Screen
+import com.example.reshare.presentation.utils.capitalizeFirst
+import com.example.reshare.presentation.utils.getBadgeStyle
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun ExploreListItem(
-    imageRes: Int,
-    price: String?,
-    isNew: Boolean,
-    title: String,
-    userName: String,
-    rating: Float?,
-    distance: String,
-    isFree: Boolean
+    navController: NavController,
+    product: Product,
+    rating: Float?
 ) {
     Card(
         modifier = Modifier
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .height(110.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable {
+                navController.currentBackStackEntry?.savedStateHandle?.set("product", product)
+                navController.navigate(Screen.ItemDetail.route)
+            },
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(16.dp),
@@ -64,11 +66,13 @@ fun ExploreListItem(
         Row {
             Box(modifier = Modifier.width(110.dp).fillMaxHeight()){
                 // Left Image
-                Image(
-                    painter = painterResource(id = imageRes),
+                AsyncImage(
+                    model = product.images[0],
                     contentDescription = "Product Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
+                    placeholder = painterResource(R.drawable.img),
+                    error = painterResource(R.drawable.img)
                 )
                 Box(
                     modifier = Modifier
@@ -103,9 +107,9 @@ fun ExploreListItem(
 
                     ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (price != null) {
+                        if (product.originalPrice != null) {
                             Text(
-                                text = price,
+                                text = "${product.originalPrice} k",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
@@ -115,34 +119,23 @@ fun ExploreListItem(
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
-                        if (isFree) {
-                            Text(
-                                text = "Free",
-                                color = DarkPurple,
-                                fontSize = 12.sp,
-                                style = TextStyle(lineHeight = 12.sp),
-                                modifier = Modifier
-                                    .background(LightPurple, shape = RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(5.dp))
-                        if (isNew) {
-                            Text(
-                                text = "New",
-                                color = DarkGreen,
-                                fontSize = 12.sp,
-                                style = TextStyle(lineHeight = 12.sp),
-                                modifier = Modifier.background(LightGreen, shape = RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
 
+                        Spacer(modifier = Modifier.width(5.dp))
+                        val style = getBadgeStyle(product.tag)
+                        Text(
+                            text = product.tag.capitalizeFirst(),
+                            color = style.textColor,
+                            fontSize = 12.sp,
+                            style = TextStyle(lineHeight = 12.sp),
+                            modifier = Modifier
+                                .background(style.backgroundColor, shape = RoundedCornerShape(8.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                     // Title
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = title,
+                        text = product.title,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         maxLines = 1,
@@ -153,16 +146,18 @@ fun ExploreListItem(
                     //Seller & rating
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(R.drawable.img),
+                        AsyncImage(
+                            model = product.createdBy.profilePic,
                             contentDescription = "User Avatar",
                             modifier = Modifier
                                 .size(24.dp)
                                 .clip(CircleShape),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(R.drawable.user),
+                            error = painterResource(R.drawable.user)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = userName, fontSize = 14.sp)
+                        Text(text = product.createdBy.firstName, fontSize = 14.sp)
                         Spacer(modifier = Modifier.width(4.dp))
                         if (rating != null) {
                             Icon(
@@ -184,41 +179,16 @@ fun ExploreListItem(
                             tint = Color.Black,
                             modifier = Modifier.size(16.dp)
                         )
-                        Text(text = distance, fontSize = 14.sp, color = Color.Black)
+                        Text(
+                            text = String.format("%.1f km", product.distance / 1000.0),
+                            fontSize = 14.sp, color = Color.Black
+                        )
                     }
-
                 }
             }
-
-
         }
     }
 }
 
-@Preview
-@Composable
-fun PreviewCardItem() {
-    Column {
-        ExploreListItem(
-            imageRes = R.drawable.img,
-            price = "20,00£",
-            isNew = true,
-            title = "3 x British Basil in a pot ddddddd",
-            userName = "Neti",
-            rating = 4.7f,
-            distance = "14.4km",
-            isFree = false
-        )
 
-        ExploreListItem(
-            imageRes = R.drawable.img_1,
-            price = null,
-            isNew = true,
-            title = "Mop holder",
-            userName = "Shaunak",
-            rating = null,
-            distance = "8.7km",
-            isFree = true
-        )
-    }
-}
+

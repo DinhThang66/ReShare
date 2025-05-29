@@ -9,13 +9,18 @@ data class Product(
     val title: String,
     val description: String,
     val images: List<String>,
+
     val pickupTimes: String,
     val pickupInstructions: String?,
+
     val locationLat: Double,
     val locationLng: Double,
+    val distance: Int,
+
     val tag: String,
     val type: String,
     val quantity: Int,
+
     val originalPrice: Double? = null,
     val discountPercent: Int? = null,
     val storeInfo: String? = null,

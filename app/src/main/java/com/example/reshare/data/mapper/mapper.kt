@@ -92,6 +92,7 @@ fun ProductEntity.toDomain(): Product {
 
         locationLat = locationLat,
         locationLng = locationLng,
+        distance = distance,
 
         tag = tag,
         type = type,
@@ -117,6 +118,7 @@ fun ProductDto.toEntity(): ProductEntity {
 
         locationLat = location.coordinates[1],
         locationLng = location.coordinates[0],
+        distance = distance.toInt(),
 
         tag = type,
         type = productType,
@@ -142,6 +144,7 @@ fun ProductDto.toDomain(): Product {
 
         locationLat = location.coordinates[1],
         locationLng = location.coordinates[0],
+        distance = distance.toInt(),
 
         tag = type,
         type = productType,

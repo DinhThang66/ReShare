@@ -87,6 +87,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemDetailScreen(
@@ -161,7 +162,7 @@ fun ItemDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 LocationMapSection(
                     location = LatLng(it.locationLat, it.locationLng),
-                    distanceText = "1.1 km away",
+                    distanceText = String.format("%.1f km away", product.distance / 1000.0),
                     radiusMeters = 300.0
                 )
             }

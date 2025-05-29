@@ -9,6 +9,7 @@ import com.example.reshare.data.remote.dto.LoginRequest
 import com.example.reshare.data.remote.dto.LoginResponse
 import com.example.reshare.data.remote.dto.PostDto
 import com.example.reshare.data.remote.dto.PostListDto
+import com.example.reshare.data.remote.dto.ProductListDto
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.data.remote.dto.RegisterResponse
 import com.example.reshare.data.remote.dto.StreamTokenDto
@@ -59,6 +60,8 @@ interface AppApi {
     // Product Endpoint
     @GET("api/product/categorized")
     suspend fun getCategorizedProducts(): CategorizedProductDto
+    @GET("api/product")
+    suspend fun getAllNearbyProducts(): ProductListDto
 
     companion object {
         const val BASE_URL = ApiConstants.BASE_URL

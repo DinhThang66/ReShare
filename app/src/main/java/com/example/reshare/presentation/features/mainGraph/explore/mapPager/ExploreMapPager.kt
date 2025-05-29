@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.reshare.domain.model.Product
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
@@ -15,8 +16,10 @@ import com.google.maps.android.compose.rememberCameraPositionState
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun ExploreMapPager(modifier: Modifier = Modifier) {
-    val location = LatLng(20.8449, 106.6881)
+fun ExploreMapPager(
+    products: List<Product>
+) {
+    val location = LatLng(21.005403, 105.843048)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, 15f)
     }
@@ -25,14 +28,23 @@ fun ExploreMapPager(modifier: Modifier = Modifier) {
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState
     ) {
-        Marker(
-            state = MarkerState(location),
-            title = "Marker in Hai Phong"
-        )
+        // Vẽ từng marker từ dữ liệu
+        products.forEach { product ->
+            val latLng = LatLng(
+                product.locationLat,
+                product.locationLng
+            )
+
+            Marker(
+                state = MarkerState(position = latLng),
+                title = product.title,
+                snippet = product.description
+            )
+        }
 
         Circle(
             center = location,
-            radius = 300.0,
+            radius = 5000.0,
             fillColor = Color(0x443F0071), // semi-transparent fill
             strokeColor = Color(0xFF3F0071),
             strokeWidth = 2f

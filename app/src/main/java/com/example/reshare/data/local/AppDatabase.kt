@@ -10,7 +10,7 @@ import com.example.reshare.data.local.product.ProductEntity
 
 @Database(
     entities = [PostEntity::class, ProductEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)

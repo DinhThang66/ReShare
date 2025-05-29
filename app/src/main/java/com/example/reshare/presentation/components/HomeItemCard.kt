@@ -1,5 +1,6 @@
 package com.example.reshare.presentation.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +44,7 @@ import com.example.reshare.R
 import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.capitalizeFirst
+import com.example.reshare.presentation.utils.getBadgeStyle
 import com.example.reshare.ui.theme.BlueD
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
@@ -50,6 +52,7 @@ import com.example.reshare.ui.theme.MilkM
 import com.example.reshare.ui.theme.OrangeM
 import com.example.reshare.ui.theme.YellowD
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun HomeItemCard(
     modifier: Modifier = Modifier,
@@ -98,12 +101,13 @@ fun HomeItemCard(
                                 imageVector = Icons.Outlined.StarOutline,
                                 contentDescription = "Favorite",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier
+                                    .size(20.dp)
                                     .background(Color.Black.copy(alpha = 0.3f), shape = CircleShape)
                             )
                         }
                         LocationTag(
-                            "5.5km",
+                            distance = String.format("%.1f km", product.distance / 1000.0),
                             modifier = Modifier
                                 .offset(y = 92.dp)
                         )
@@ -116,7 +120,8 @@ fun HomeItemCard(
                 text = product.title,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
                     .padding(top = 10.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -133,27 +138,6 @@ fun HomeItemCard(
     }
 }
 
-
-data class BadgeStyle(
-    val backgroundColor: Color,
-    val textColor: Color
-)
-object BadgeStyles {
-    val Free = BadgeStyle(LightPurple, DarkPurple)
-    val Wanted = BadgeStyle(MilkM, OrangeM)
-    val Paid = BadgeStyle(Color.Black.copy(0.6f), Color.White)
-    val Reduced = BadgeStyle(YellowD, BlueD)
-}
-
-fun getBadgeStyle(tag: String): BadgeStyle {
-    return when (tag.lowercase()) {
-        "free" -> BadgeStyles.Free
-        "wanted" -> BadgeStyles.Wanted
-        "paid" -> BadgeStyles.Paid
-        "reduced" -> BadgeStyles.Reduced
-        else -> BadgeStyles.Free
-    }
-}
 @Composable
 fun Badge(tag: String, originalPrice: Double? = null) {
     val style = getBadgeStyle(tag)

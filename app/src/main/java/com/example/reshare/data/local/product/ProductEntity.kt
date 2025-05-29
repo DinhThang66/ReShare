@@ -17,6 +17,7 @@ data class ProductEntity (
 
     val locationLat: Double,
     val locationLng: Double,
+    val distance: Int,
 
     val tag: String,
     val type: String,

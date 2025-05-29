@@ -1,10 +1,12 @@
 package com.example.reshare.data.repository
 
+import android.util.Log
 import com.example.reshare.data.local.product.ProductDao
 import com.example.reshare.data.mapper.toDomain
 import com.example.reshare.data.mapper.toEntity
 import com.example.reshare.data.remote.AppApi
 import com.example.reshare.domain.model.CategorizedProducts
+import com.example.reshare.domain.model.Product
 import com.example.reshare.domain.repository.ProductRepository
 import com.example.reshare.presentation.utils.Resource
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +80,31 @@ class ProductRepositoryImpl (
 
         dao.upsertProducts(productEntities)
         emit(Resource.Success(categorizedProductsFromApi.toDomain()))
+        emit(Resource.Loading(false))
+    }
+
+    override suspend fun getNearbyProducts(
+        forceFetchFromRemote: Boolean
+    ): Flow<Resource<List<Product>>> =  flow {
+        emit(Resource.Loading(true))
+
+        val productsFromApi = try {
+            api.getAllNearbyProducts()
+        }catch (e: IOException) {
+            emit(Resource.Error("Network error: ${e.message}"))
+            emit(Resource.Loading(false))
+            return@flow
+        } catch (e: HttpException) {
+            emit(Resource.Error("Server error: ${e.message}"))
+            emit(Resource.Loading(false))
+            return@flow
+        } catch (e: Exception) {
+            emit(Resource.Error("Unexpected error: ${e.message}"))
+            emit(Resource.Loading(false))
+            return@flow
+        }
+
+        emit(Resource.Success(productsFromApi.products.map { it.toDomain() }))
         emit(Resource.Loading(false))
     }
 }

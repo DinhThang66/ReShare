@@ -173,7 +173,7 @@ fun LocationOn(
             )
             Spacer(modifier = Modifier.width(2.dp))
             Text(
-                text = "Hải Phòng",
+                text = "Ha noi",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -187,7 +187,7 @@ fun LocationOn(
             )
         }
         Text(
-            text = "Listings within 10km",
+            text = "Listings within 3km",
             fontWeight = FontWeight.Light,
             fontSize = 12.sp,
             color = Color.Black,

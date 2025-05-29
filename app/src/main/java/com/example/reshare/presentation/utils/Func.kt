@@ -1,5 +1,12 @@
 package com.example.reshare.presentation.utils
 
+import androidx.compose.ui.graphics.Color
+import com.example.reshare.ui.theme.BlueD
+import com.example.reshare.ui.theme.DarkPurple
+import com.example.reshare.ui.theme.LightPurple
+import com.example.reshare.ui.theme.MilkM
+import com.example.reshare.ui.theme.OrangeM
+import com.example.reshare.ui.theme.YellowD
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -53,3 +60,24 @@ fun formatTimeAgo(isoTime: String): String {
 
 fun String.capitalizeFirst(): String =
     this.replaceFirstChar { it.uppercase() }
+
+data class BadgeStyle(
+    val backgroundColor: Color,
+    val textColor: Color
+)
+object BadgeStyles {
+    val Free = BadgeStyle(LightPurple, DarkPurple)
+    val Wanted = BadgeStyle(MilkM, OrangeM)
+    val Paid = BadgeStyle(Color.Black.copy(0.6f), Color.White)
+    val Reduced = BadgeStyle(YellowD, BlueD)
+}
+
+fun getBadgeStyle(tag: String): BadgeStyle {
+    return when (tag.lowercase()) {
+        "free" -> BadgeStyles.Free
+        "wanted" -> BadgeStyles.Wanted
+        "paid" -> BadgeStyles.Paid
+        "reduced" -> BadgeStyles.Reduced
+        else -> BadgeStyles.Free
+    }
+}
