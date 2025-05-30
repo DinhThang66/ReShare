@@ -28,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.reshare.presentation.features.auth.login.LoginScreen
 import com.example.reshare.presentation.features.auth.register.RegisterScreen
+import com.example.reshare.presentation.features.auth.setYourLocation.SetYourLocationScreen
 import com.example.reshare.presentation.features.main.MainScreen
 import com.example.reshare.presentation.features.mainGraph.community.createPost.CreatePostScreen
 import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailScreen
@@ -38,7 +39,7 @@ import com.example.reshare.presentation.features.mainGraph.home.makeARequest.Mak
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
 import com.example.reshare.presentation.features.sideBar.MyImpactScreen
 import com.example.reshare.presentation.features.sideBar.MyListingsScreen
-import com.example.reshare.presentation.features.sideBar.MyProfileScreen
+import com.example.reshare.presentation.features.sideBar.myProfile.MyProfileScreen
 import com.example.reshare.presentation.features.sideBar.MyWatchListScreen
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.ui.theme.ReShareTheme
@@ -124,16 +125,19 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable(Screen.MyImpactScreen.route) {
-                                MyImpactScreen()
+                                MyImpactScreen(navController = navController)
                             }
                             composable(Screen.MyWatchlistScreen.route) {
-                                MyWatchListScreen()
+                                MyWatchListScreen(navController = navController)
                             }
                             composable(Screen.MyListingsScreen.route) {
-                                MyListingsScreen()
+                                MyListingsScreen(navController = navController)
                             }
+//                            composable(Screen.MyProfileScreen.route) {
+//                                MyProfileScreen(navController = navController)
+//                            }
                             composable(Screen.MyProfileScreen.route) {
-                                MyProfileScreen()
+                                SetYourLocationScreen()
                             }
                         }
                     }

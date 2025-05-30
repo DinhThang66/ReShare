@@ -44,6 +44,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,36 +66,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.reshare.presentation.features.auth.login.LoginUiEvent
 import com.example.reshare.ui.theme.BlueGray
 import com.example.reshare.ui.theme.DarkBlue
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+
     val context = LocalContext.current
     val activity = context as? Activity
     LaunchedEffect(Unit) {
         @Suppress("DEPRECATION")
         activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     }
-
-    val state = viewModel.state
-
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var agreePolicy by remember { mutableStateOf(false) }
-
-    var firstNameError by remember { mutableStateOf("") }
-    var lastNameError by remember { mutableStateOf("") }
-    var emailError by remember { mutableStateOf("") }
-    var passwordError by remember { mutableStateOf("") }
-    var confirmPasswordError by remember { mutableStateOf("") }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -104,31 +92,7 @@ fun RegisterScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Join ReShare",
-                        color = if (isSystemInDarkTheme()) Color.White else Color.Black,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )},
-                colors = TopAppBarDefaults.topAppBarColors(
-                    if (isSystemInDarkTheme()) DarkBlue else Color.White
-                ),
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Outlined.ArrowBackIosNew,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                },
-                modifier = Modifier.shadow(2.dp)
-            )
-        },
+        topBar = { CustomTopAppBar(onBackClick = {navController.popBackStack() } ) },
     ) { paddingValues ->
         val combinedInsets = WindowInsets.ime.union(WindowInsets.navigationBars).asPaddingValues()
 
@@ -143,135 +107,182 @@ fun RegisterScreen(
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
         ) {
             item{
-                TextFieldCustom(
-                    label = "First name (display name)",
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    errorMessage = firstNameError,
-                    capitalization = KeyboardCapitalization.Words
+                RegisterFormFields(
+                    firstName = state.firstName, firstNameError = state.firstNameError,
+                    lastName = state.lastName, lastNameError = state.lastNameError,
+                    email = state.email, emailError = state.emailError,
+                    password = state.password, passwordError = state.passwordError,
+                    confirmPassword = state.confirmPassword,
+                    confirmPasswordError = state.confirmPasswordError,
+                    onFirstNameChange = { viewModel.onEvent(RegisterUiEvent.OnFirstNameChange(it)) },
+                    onLastNameChange = { viewModel.onEvent(RegisterUiEvent.OnLastNameChange(it)) },
+                    onEmailNameChange = { viewModel.onEvent(RegisterUiEvent.OnEmailNameChange(it)) },
+                    onPasswordChange = { viewModel.onEvent(RegisterUiEvent.OnPasswordChange(it)) },
+                    onConfirmPasswordChange = { viewModel.onEvent(RegisterUiEvent.OnConfirmPasswordChange(it)) }
                 )
 
-                TextFieldCustom(
-                    label = "Last name",
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    errorMessage = lastNameError,
-                    capitalization = KeyboardCapitalization.Words
-                )
-
-                TextFieldCustom(
-                    label = "Email",
-                    value = email,
-                    onValueChange = { email = it },
-                    errorMessage = emailError
-                )
-
-                TextFieldCustom(
-                    label = "Password",
-                    value = password,
-                    onValueChange = { password = it },
-                    isPassword = true,
-                    errorMessage = passwordError
-                )
-
-                TextFieldCustom(
-                    label = "Confirm password",
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
-                    isPassword = true,
-                    errorMessage = confirmPasswordError
-                )
-            }
-
-            item{
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clickable { agreePolicy = !agreePolicy }
-                        .padding(vertical = 8.dp)
-                ) {
-                    Checkbox(checked = agreePolicy, onCheckedChange = { agreePolicy = it })
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "I agree to the terms and privacy policy")
-                }
-            }
-
-            item{
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp),
-                    onClick = {
-                        firstNameError = if (firstName.isBlank()) "First name can not be blank" else ""
-                        lastNameError = if (lastName.isBlank()) "Last name can not be blank" else ""
-                        emailError = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches())
-                            "Oh no, your email doesn't seem right. Please try again" else ""
-                        passwordError = if (password.length < 8) "Passwords should be at least 8 characters" else ""
-                        confirmPasswordError = when {
-                            confirmPassword.isBlank() -> "Confirm password cannot be blank"
-                            confirmPassword != password -> "Passwords do not match"
-                            else -> ""
-                        }
-
-                        val isValid = listOf(
-                            firstNameError,
-                            lastNameError,
-                            emailError,
-                            passwordError,
-                            confirmPasswordError
-                        ).all { it.isBlank() }
-
-                        if (isValid) {
-                            viewModel.onEvent(
-                                RegisterEvent.Submit(
-                                    firstName,
-                                    lastName,
-                                    email,
-                                    password
-                                )
-                            )
+                BtnRegisterAndShowState(
+                    onBtnClick = {
+                        viewModel.onEvent(RegisterUiEvent.ValidateForm(
+                            state.firstName, state.lastName, state.email,
+                            state.password, state.confirmPassword
+                        ))
+                        if (state.isValid) {
+                            viewModel.onEvent(RegisterUiEvent.Submit(
+                                state.firstName, state.lastName, state.email, state.password
+                            ))
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSystemInDarkTheme()) BlueGray else Color.Black,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = "Join Now",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Loading spinner
-                if (state.isLoading) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                // Error message
-                if (state.error.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = state.error,
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
+                    isLoading = state.isLoading,
+                    error = state.error
+                )
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomTopAppBar(
+    onBackClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = "Join ReShare",
+                color = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold
+            )},
+        colors = TopAppBarDefaults.topAppBarColors(
+            if (isSystemInDarkTheme()) DarkBlue else Color.White
+        ),
+        navigationIcon = {
+            IconButton(onBackClick) {
+                Icon(
+                    imageVector = Icons.Outlined.ArrowBackIosNew,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        },
+        modifier = Modifier.shadow(2.dp)
+    )
+}
+
+@Composable
+fun RegisterFormFields(
+    firstName: String, firstNameError: String,
+    lastName: String, lastNameError: String,
+    email: String, emailError: String,
+    password: String, passwordError: String,
+    confirmPassword: String, confirmPasswordError: String,
+    onFirstNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit,
+    onEmailNameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+) {
+    TextFieldCustom(
+        label = "First name (display name)",
+        value = firstName,
+        onValueChange = onFirstNameChange,
+        errorMessage = firstNameError,
+        capitalization = KeyboardCapitalization.Words
+    )
+
+    TextFieldCustom(
+        label = "Last name",
+        value = lastName,
+        onValueChange = onLastNameChange,
+        errorMessage = lastNameError,
+        capitalization = KeyboardCapitalization.Words
+    )
+
+    TextFieldCustom(
+        label = "Email",
+        value = email,
+        onValueChange = onEmailNameChange,
+        errorMessage = emailError
+    )
+
+    TextFieldCustom(
+        label = "Password",
+        value = password,
+        onValueChange = onPasswordChange,
+        isPassword = true,
+        errorMessage = passwordError
+    )
+
+    TextFieldCustom(
+        label = "Confirm password",
+        value = confirmPassword,
+        onValueChange = onConfirmPasswordChange,
+        isPassword = true,
+        errorMessage = confirmPasswordError
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+//            .clickable { agreePolicy = !agreePolicy }
+//            .padding(vertical = 8.dp)
+    ) {
+        //Checkbox(checked = agreePolicy, onCheckedChange = { agreePolicy = it })
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(text = "I agree to the terms and privacy policy")
+    }
+}
+
+@Composable
+fun BtnRegisterAndShowState(
+    onBtnClick: () -> Unit,
+    isLoading: Boolean,
+    error: String
+) {
+    Spacer(modifier = Modifier.height(16.dp))
+    Button(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp),
+        onClick = onBtnClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSystemInDarkTheme()) BlueGray else Color.Black,
+            contentColor = Color.White
+        ),
+        shape = RoundedCornerShape(4.dp)
+    ) {
+        Text(
+            text = "Join Now",
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp
+        )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Loading spinner
+    if (isLoading) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    }
+    // Error message
+    if (error.isNotBlank()) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = error,
+            color = Color.Red,
+            fontSize = 14.sp,
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+        )
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
 }
 
 @Composable

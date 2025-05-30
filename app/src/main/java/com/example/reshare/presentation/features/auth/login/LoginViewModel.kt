@@ -1,13 +1,14 @@
 package com.example.reshare.presentation.features.auth.login
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.data.local.UserPreferences
 import com.example.reshare.domain.usecase.auth.LoginUseCase
+import com.example.reshare.presentation.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,51 +17,51 @@ class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
-    var state by mutableStateOf(LoginState())
-        private set
+    private val _state = MutableStateFlow(LoginState())
+    val state = _state.asStateFlow()
 
-    fun onEvent(event: LoginEvent) {
+    fun onEvent(event: LoginUiEvent) {
         when (event) {
-            is LoginEvent.Submit -> {
+            is LoginUiEvent.Submit -> {
                 val errorMessage = validateInput(event.email, event.password)
                 if (errorMessage != null) {
-                    state = state.copy(error = errorMessage)
+                    _state.update { it.copy(error = errorMessage) }
                     return
                 }
-
                 login(event.email, event.password)
+            }
+            is LoginUiEvent.OnEmailChange -> {
+                _state.update { it.copy(email = event.email) }
+            }
+            is LoginUiEvent.OnPasswordChange -> {
+                _state.update { it.copy(password = event.password) }
             }
         }
     }
 
     private fun login(email: String, password: String) {
+        _state.update { it.copy(isLoading = true, error = "") }
         viewModelScope.launch {
-            state = state.copy(isLoading = true, error = "")
-            val result = loginUseCase(email, password)
-
-            state = if (result.isSuccess) {
-                val authResult = result.getOrNull()
-                if (authResult != null) {
+            when (val result = loginUseCase(email, password)) {
+                is Resource.Success -> {
+                    val user = result.data!!.user
+                    val token = result.data.token
+                    _state.update {
+                        it.copy(isLoading = false, token = token)
+                    }
                     userPreferences.saveUser(
-                        id = authResult.user.id,
-                        firstName = authResult.user.firstName,
-                        lastName = authResult.user.lastName,
-                        email = authResult.user.email,
-                        profilePic = authResult.user.profilePic,
-                        token = authResult.token
+                        id = user.id,
+                        firstName = user.firstName,
+                        lastName = user.lastName,
+                        email = user.email,
+                        profilePic = user.profilePic,
+                        token = token
                     )
                 }
-
-                state.copy(
-                    isLoading = false,
-                    isSuccess = true,
-                    token = authResult?.token
-                )
-            } else {
-                state.copy(
-                    isLoading = false,
-                    error = result.exceptionOrNull()?.message ?: "Unknown error"
-                )
+                is Resource.Error -> {
+                    _state.update { it.copy(isLoading = false) }
+                }
+                is Resource.Loading -> Unit
             }
         }
     }

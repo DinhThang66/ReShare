@@ -5,13 +5,13 @@ import com.example.reshare.data.remote.dto.CategorizedProductDto
 import com.example.reshare.data.remote.dto.CommentDto
 import com.example.reshare.data.remote.dto.CommentsDto
 import com.example.reshare.data.remote.dto.LikeResponseDto
+import com.example.reshare.data.remote.dto.LoginDto
 import com.example.reshare.data.remote.dto.LoginRequest
-import com.example.reshare.data.remote.dto.LoginResponse
 import com.example.reshare.data.remote.dto.PostDto
 import com.example.reshare.data.remote.dto.PostListDto
 import com.example.reshare.data.remote.dto.ProductListDto
+import com.example.reshare.data.remote.dto.RegisterDto
 import com.example.reshare.data.remote.dto.RegisterRequest
-import com.example.reshare.data.remote.dto.RegisterResponse
 import com.example.reshare.data.remote.dto.StreamTokenDto
 import com.example.reshare.data.remote.dto.UserDto
 import com.example.reshare.presentation.utils.ApiConstants
@@ -29,9 +29,9 @@ import retrofit2.http.Query
 
 interface AppApi {
     @POST("api/auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+    suspend fun login(@Body request: LoginRequest): Response<LoginDto>
     @POST("api/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterDto>
     @GET("api/chat/token")
     suspend fun getStreamToken(): Response<StreamTokenDto>
 

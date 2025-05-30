@@ -6,26 +6,28 @@ import com.example.reshare.data.remote.dto.LoginRequest
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.domain.model.AuthResult
 import com.example.reshare.domain.repository.AuthRepository
+import com.example.reshare.presentation.utils.Resource
 
 class AuthRepositoryImpl(
     private val api: AppApi
 ) : AuthRepository {
-    override suspend fun login(email: String, password: String): Result<AuthResult> {
+    override suspend fun login(email: String, password: String): Resource<AuthResult> {
         return try {
             val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
-                Result.success(
+                Resource.Success(
                     AuthResult(
                         token = body.token,
-                        user = body.user.toDomain()
+                        user = body.user.toDomain(),
+                        hasLocation = body.hasLocation
                     )
                 )
             } else {
-                Result.failure(Exception("Login failed: ${response.message()}"))
+                Resource.Error("Login failed: ${response.message()}")
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Resource.Error("Error: $e")
         }
     }
 
@@ -34,22 +36,22 @@ class AuthRepositoryImpl(
         lastName: String,
         email: String,
         password: String
-    ): Result<AuthResult> {
+    ): Resource<AuthResult> {
         return try {
             val response = api.register(RegisterRequest(firstName, lastName, email, password))
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
-                Result.success(
+                Resource.Success(
                     AuthResult(
                         token = body.token,
                         user = body.user.toDomain()
                     )
                 )
             } else {
-                Result.failure(Exception("Register failed: ${response.message()}"))
+                Resource.Error("Register failed: ${response.message()}")
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Resource.Error("Error: $e")
         }
     }
 }

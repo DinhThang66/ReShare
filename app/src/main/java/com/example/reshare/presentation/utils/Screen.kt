@@ -21,5 +21,5 @@ sealed class Screen(var route: String) {
     data object MyWatchlistScreen: Screen("MyWatchlist")
     data object MyListingsScreen: Screen("MyListings")
     data object MyProfileScreen: Screen("MyProfile")
-
+    data object SetYourLocationScreen: Screen("SetYourLocation")
 }

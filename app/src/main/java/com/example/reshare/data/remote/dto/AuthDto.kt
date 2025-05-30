@@ -13,9 +13,10 @@ data class UserDto(
     val profilePic: String
 )
 
-data class LoginResponse(
+data class LoginDto(
     val token: String,
-    val user: UserDto
+    val user: UserDto,
+    val hasLocation: Boolean
 )
 
 data class RegisterRequest(
@@ -25,7 +26,7 @@ data class RegisterRequest(
     val password: String
 )
 
-data class RegisterResponse(
+data class RegisterDto(
     val token: String,
     val user: UserDto
 )

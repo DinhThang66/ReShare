@@ -2,6 +2,7 @@ package com.example.reshare.domain.usecase.auth
 
 import com.example.reshare.domain.model.AuthResult
 import com.example.reshare.domain.repository.AuthRepository
+import com.example.reshare.presentation.utils.Resource
 import javax.inject.Inject
 
 class RegisterUseCase @Inject constructor(
@@ -12,7 +13,7 @@ class RegisterUseCase @Inject constructor(
         lastName: String,
         email: String,
         password: String
-    ): Result<AuthResult> {
+    ): Resource<AuthResult> {
         return repository.register(firstName, lastName, email, password)
     }
 }

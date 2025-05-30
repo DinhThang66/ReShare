@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,9 +51,7 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
-    val state = viewModel.state
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val state by viewModel.state.collectAsState()
 
     Surface{
         Column(modifier = modifier
@@ -68,11 +67,11 @@ fun LoginScreen(
                     .padding(horizontal = 30.dp)
             ) {
                 LoginSection(
-                    email = email,
-                    onEmailChange = { email = it },
-                    password = password,
-                    onPasswordChange = { password = it },
-                    viewModel = viewModel
+                    email = state.email,
+                    password = state.password,
+                    onEmailChange = { viewModel.onEvent(LoginUiEvent.OnEmailChange(it)) },
+                    onPasswordChange = { viewModel.onEvent(LoginUiEvent.OnPasswordChange(it)) },
+                    onLogin = { viewModel.onEvent(LoginUiEvent.Submit(state.email, state.password)) }
                 )
                 Box(
                     modifier = Modifier
@@ -92,12 +91,10 @@ fun LoginScreen(
                 CreateAccountText(onCreateNowClick = {
                     navController.navigate(Screen.Register.route)
                 })
-
             }
         }
     }
 }
-
 
 @Composable
 fun TopSection() {
@@ -156,10 +153,10 @@ fun TopSection() {
 @Composable
 fun LoginSection(
     email: String,
-    onEmailChange: (String) -> Unit,
     password: String,
+    onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    onLogin: () -> Unit
 ) {
     TextFieldCustom(
         label = "Email",
@@ -180,7 +177,7 @@ fun LoginSection(
         modifier = Modifier
             .fillMaxWidth()
             .height(40.dp),
-        onClick = { viewModel.onEvent(LoginEvent.Submit(email, password)) },
+        onClick = { onLogin() },
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSystemInDarkTheme()) BlueGray else Color.Black,
             contentColor = Color.White
