@@ -1,9 +1,13 @@
 package com.example.reshare.presentation.features.mainGraph.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.reshare.data.local.UserPreferences
+import com.example.reshare.domain.usecase.googleMaps.GetReverseGeocodingUseCase
 import com.example.reshare.domain.usecase.product.GetCategorizedProductsUseCase
 import com.example.reshare.presentation.utils.Resource
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +19,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getCategorizedProductsUseCase : GetCategorizedProductsUseCase
+    private val getCategorizedProductsUseCase : GetCategorizedProductsUseCase,
+    private val getReverseGeocodingUseCase: GetReverseGeocodingUseCase,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -23,6 +29,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadProducts()
+        loadUserLocation()
     }
     fun onEvent(event: HomeUiEvent) {
         when (event) {
@@ -57,6 +64,29 @@ class HomeViewModel @Inject constructor(
                                 error = ""
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadUserLocation() {
+        viewModelScope.launch {
+            userPreferences.getUserFlow().collect { user ->
+                val lat = user?.latitude
+                val lng = user?.longitude
+
+                if (lat != null && lng != null) {
+                    when (val result = getReverseGeocodingUseCase(lat, lng)) {
+                        is Resource.Success -> {
+                            val locationName = result.data ?: ""
+                            _state.update { it.copy(userLocation = locationName) }
+                            Log.d("result", locationName)
+                        }
+                        is Resource.Error -> {
+                            _state.update { it.copy(error = result.message ?: "Error") }
+                        }
+                        else -> Unit
                     }
                 }
             }

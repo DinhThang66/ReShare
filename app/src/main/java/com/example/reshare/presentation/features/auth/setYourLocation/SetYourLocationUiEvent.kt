@@ -8,4 +8,6 @@ sealed class SetYourLocationUiEvent {
     data class OnCameraMoved(val latLng: LatLng) : SetYourLocationUiEvent()
     data class OnSuggestionSelectedWithLatLng(val latLng: LatLng, val isRequesting: Boolean = false) : SetYourLocationUiEvent()
     data class OnZoomChanged(val zoom: Float) : SetYourLocationUiEvent()
+
+    data class SetLocation(val latitude: Double, val longitude: Double) : SetYourLocationUiEvent()
 }

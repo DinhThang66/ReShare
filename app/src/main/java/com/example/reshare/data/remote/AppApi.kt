@@ -5,6 +5,7 @@ import com.example.reshare.data.remote.dto.CategorizedProductDto
 import com.example.reshare.data.remote.dto.CommentDto
 import com.example.reshare.data.remote.dto.CommentsDto
 import com.example.reshare.data.remote.dto.LikeResponseDto
+import com.example.reshare.data.remote.dto.LocationRequest
 import com.example.reshare.data.remote.dto.LoginDto
 import com.example.reshare.data.remote.dto.LoginRequest
 import com.example.reshare.data.remote.dto.PostDto
@@ -13,6 +14,7 @@ import com.example.reshare.data.remote.dto.ProductListDto
 import com.example.reshare.data.remote.dto.RegisterDto
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.data.remote.dto.StreamTokenDto
+import com.example.reshare.data.remote.dto.UpdateLocationDto
 import com.example.reshare.data.remote.dto.UserDto
 import com.example.reshare.presentation.utils.ApiConstants
 import okhttp3.MultipartBody
@@ -21,6 +23,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
@@ -32,6 +35,10 @@ interface AppApi {
     suspend fun login(@Body request: LoginRequest): Response<LoginDto>
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterDto>
+    @PATCH("api/auth/update-location")
+    suspend fun updateLocation(
+        @Body body: LocationRequest
+    ): Response<UpdateLocationDto>
     @GET("api/chat/token")
     suspend fun getStreamToken(): Response<StreamTokenDto>
 

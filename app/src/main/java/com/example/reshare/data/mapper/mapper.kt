@@ -21,7 +21,9 @@ fun UserDto.toDomain(): User {
         firstName = firstName,
         lastName = lastName,
         email = email,
-        profilePic = profilePic
+        profilePic = profilePic,
+        latitude = location?.coordinates?.getOrNull(1),
+        longitude = location?.coordinates?.getOrNull(0)
     )
 }
 

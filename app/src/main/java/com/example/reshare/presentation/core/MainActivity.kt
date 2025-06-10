@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,19 +32,17 @@ import com.example.reshare.presentation.features.main.MainScreen
 import com.example.reshare.presentation.features.mainGraph.community.createPost.CreatePostScreen
 import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailScreen
 import com.example.reshare.presentation.features.mainGraph.community.userProfile.UserProfileScreen
-import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.RadiusMapScreen
+import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.ChooseALocationScreen
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
 import com.example.reshare.presentation.features.mainGraph.home.makeARequest.MakeRequestScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
 import com.example.reshare.presentation.features.sideBar.MyImpactScreen
 import com.example.reshare.presentation.features.sideBar.MyListingsScreen
-import com.example.reshare.presentation.features.sideBar.myProfile.MyProfileScreen
 import com.example.reshare.presentation.features.sideBar.MyWatchListScreen
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.ui.theme.ReShareTheme
 import dagger.hilt.android.AndroidEntryPoint
-import io.getstream.chat.android.client.ChatClient
-import io.getstream.chat.android.models.InitializationState
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -54,21 +51,22 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val viewModel: MainActivityViewModel = hiltViewModel()
-            val hasValidToken by viewModel.hasValidToken.collectAsState(initial = null)
+            val state by viewModel.state.collectAsState()
 
-            // lấy trạng thái khởi tạo của ChatClient
-            val clientState = ChatClient.instance().clientState
-            val isChatReady = clientState.initializationState.collectAsState().value == InitializationState.COMPLETE
-
-            LaunchedEffect(hasValidToken) {
-                if (hasValidToken == true) {
-                    viewModel.connectChatUserIfNeeded()
+            LaunchedEffect(state.hasValidToken) {
+                if (state.hasValidToken == true) {
+                    viewModel.onEvent(MainActivityEvent.ConnectChatUserIfNeeded)
                 }
             }
 
             ReShareTheme {
-                when {
-                    hasValidToken == false -> {
+                when (state.hasValidToken) {
+                    null -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    false -> {
                         val navController = rememberNavController()
                         NavHost(
                             navController = navController,
@@ -82,69 +80,74 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
-                    hasValidToken == true && isChatReady -> {
-                        val navController = rememberNavController()
-                        NavHost(
-                            navController = navController,
-                            startDestination = Screen.Main.route
-                        ) {
-                            composable(Screen.Main.route) {
-                                MainScreen(navController = navController)
+                    true -> {
+                        when {
+                            state.hasLocation == false -> {
+                                SetYourLocationScreen()
                             }
-                            composable(Screen.PostDetail.route) {
-                                PostDetailScreen(navController = navController)
-                            }
-                            animatedComposableHorizontalSlide(Screen.ItemDetail.route) {
-                                ItemDetailScreen(navController = navController)
-                            }
-                            composable(Screen.Messages.route + "/{channelId}") { backStackEntry ->
-                                val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
-                                ChatScreen(
-                                    channelId = channelId,
-                                    onBackPressed = {
-                                        navController.popBackStack()
-                                    }
-                                )
-                            }
-                            composable(Screen.UserProfile.route + "/{userId}") {backStackEntry ->
-                                val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-                                UserProfileScreen(
+                            state.hasLocation == true && state.isChatReady -> {
+                                val navController = rememberNavController()
+                                NavHost(
                                     navController = navController,
-                                    userId = userId
-                                )
-                            }
-                            animatedComposableHorizontalSlide(Screen.CreatePost.route) {
-                                CreatePostScreen(navController = navController)
-                            }
-                            animatedComposableVerticalSlide(Screen.RadiusMap.route) {
-                                RadiusMapScreen(navController = navController)
-                            }
-                            animatedComposableHorizontalSlide(Screen.MakeARequest.route) {
-                                MakeRequestScreen(navController = navController)
-                            }
+                                    startDestination = Screen.Main.route
+                                ) {
+                                    composable(Screen.Main.route) {
+                                        MainScreen(navController = navController)
+                                    }
+                                    composable(Screen.PostDetail.route) {
+                                        PostDetailScreen(navController = navController)
+                                    }
+                                    animatedComposableHorizontalSlide(Screen.ItemDetail.route) {
+                                        ItemDetailScreen(navController = navController)
+                                    }
+                                    composable(Screen.Messages.route + "/{channelId}") { backStackEntry ->
+                                        val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
+                                        ChatScreen(
+                                            channelId = channelId,
+                                            onBackPressed = {
+                                                navController.popBackStack()
+                                            }
+                                        )
+                                    }
+                                    composable(Screen.UserProfile.route + "/{userId}") {backStackEntry ->
+                                        val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+                                        UserProfileScreen(
+                                            navController = navController,
+                                            userId = userId
+                                        )
+                                    }
+                                    animatedComposableHorizontalSlide(Screen.CreatePost.route) {
+                                        CreatePostScreen(navController = navController)
+                                    }
+                                    animatedComposableVerticalSlide(Screen.RadiusMap.route) {
+                                        ChooseALocationScreen(navController = navController)
+                                    }
+                                    animatedComposableHorizontalSlide(Screen.MakeARequest.route) {
+                                        MakeRequestScreen(navController = navController)
+                                    }
 
-                            composable(Screen.MyImpactScreen.route) {
-                                MyImpactScreen(navController = navController)
-                            }
-                            composable(Screen.MyWatchlistScreen.route) {
-                                MyWatchListScreen(navController = navController)
-                            }
-                            composable(Screen.MyListingsScreen.route) {
-                                MyListingsScreen(navController = navController)
-                            }
+                                    composable(Screen.MyImpactScreen.route) {
+                                        MyImpactScreen(navController = navController)
+                                    }
+                                    composable(Screen.MyWatchlistScreen.route) {
+                                        MyWatchListScreen(navController = navController)
+                                    }
+                                    composable(Screen.MyListingsScreen.route) {
+                                        MyListingsScreen(navController = navController)
+                                    }
 //                            composable(Screen.MyProfileScreen.route) {
 //                                MyProfileScreen(navController = navController)
 //                            }
-                            composable(Screen.MyProfileScreen.route) {
-                                SetYourLocationScreen()
+                                    composable(Screen.MyProfileScreen.route) {
+                                        SetYourLocationScreen()
+                                    }
+                                }
                             }
-                        }
-                    }
-
-                    !isChatReady -> {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                            else -> {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator()
+                                }
+                            }
                         }
                     }
                 }
@@ -155,14 +158,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
-
-
-
-
-
-
-@OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.animatedComposable(
     route: String,
     content: @Composable () -> Unit
@@ -176,7 +171,6 @@ fun NavGraphBuilder.animatedComposable(
     ) { content() }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.animatedComposableVerticalSlide(
     route: String,
     content: @Composable () -> Unit
@@ -212,7 +206,6 @@ fun NavGraphBuilder.animatedComposableVerticalSlide(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.animatedComposableHorizontalSlide(
     route: String,
     content: @Composable () -> Unit
@@ -221,25 +214,25 @@ fun NavGraphBuilder.animatedComposableHorizontalSlide(
         route = route,
         enterTransition = {
             slideInHorizontally(
-                initialOffsetX = { fullWidth -> fullWidth }, // từ phải vào
+                initialOffsetX = { fullWidth -> fullWidth }, // right in
                 animationSpec = tween(durationMillis = 300)
             )
         },
         exitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { fullWidth -> -fullWidth }, // sang trái
+                targetOffsetX = { fullWidth -> -fullWidth }, // left out
                 animationSpec = tween(durationMillis = 300)
             )
         },
         popEnterTransition = {
             slideInHorizontally(
-                initialOffsetX = { fullWidth -> -fullWidth }, // từ trái vào
+                initialOffsetX = { fullWidth -> -fullWidth }, // left in
                 animationSpec = tween(durationMillis = 300)
             )
         },
         popExitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { fullWidth -> fullWidth }, // sang phải
+                targetOffsetX = { fullWidth -> fullWidth }, // right out
                 animationSpec = tween(durationMillis = 300)
             )
         }
@@ -247,50 +240,3 @@ fun NavGraphBuilder.animatedComposableHorizontalSlide(
         content()
     }
 }
-
-
-/*
-if (hasValidToken != null) {
-    val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        //startDestination = Screen.Login.route
-        startDestination = if (hasValidToken == true) Screen.Main.route else Screen.Login.route
-    ) {
-        composable(Screen.Main.route) {
-            MainScreen(navController = navController)
-        }
-        animatedComposable(Screen.Login.route) {
-            LoginScreen(navController = navController)
-        }
-        animatedComposableVerticalSlide(Screen.Register.route) {
-            RegisterScreen(navController = navController)
-        }
-        composable(Screen.PostDetail.route) {
-            PostDetailScreen(navController = navController)
-        }
-        animatedComposableHorizontalSlide(Screen.ItemDetail.route) {
-            ItemDetailScreen(navController = navController)
-        }
-        composable(Screen.Messages.route + "/{channelId}") { backStackEntry ->
-            val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
-            ChatScreen(
-                channelId = channelId,
-                onBackPressed = {
-                    navController.popBackStack()
-                }
-            )
-        }
-    }
-} else {
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
-}
- */
-
-

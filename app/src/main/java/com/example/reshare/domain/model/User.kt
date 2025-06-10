@@ -10,4 +10,6 @@ data class User (
     val lastName: String,
     val email: String,
     val profilePic: String,
+    val latitude: Double?,
+    val longitude: Double?
 ): Parcelable

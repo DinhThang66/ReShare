@@ -10,7 +10,13 @@ data class UserDto(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val profilePic: String
+    val profilePic: String,
+    val location: Location?
+)
+
+data class LocationDto(
+    val type: String, // "Point"
+    val coordinates: List<Double> // [lng, lat]
 )
 
 data class LoginDto(
@@ -29,4 +35,14 @@ data class RegisterRequest(
 data class RegisterDto(
     val token: String,
     val user: UserDto
+)
+
+data class UpdateLocationDto(
+    val user: UserDto,
+    val hasLocation: Boolean
+)
+
+data class LocationRequest(
+    val latitude: Double,
+    val longitude: Double
 )

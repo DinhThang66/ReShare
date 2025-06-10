@@ -12,4 +12,6 @@ interface AuthRepository {
         email: String,
         password: String
     ): Resource<AuthResult>
+
+    suspend fun updateLocation(latitude: Double, longitude: Double): Resource<String>
 }

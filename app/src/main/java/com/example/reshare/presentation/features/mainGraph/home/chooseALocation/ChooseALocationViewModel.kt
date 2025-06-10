@@ -2,9 +2,11 @@ package com.example.reshare.presentation.features.mainGraph.home.chooseALocation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.reshare.data.local.UserPreferences
 import com.example.reshare.domain.usecase.googleMaps.GetPlaceCoordinatesUseCase
 import com.example.reshare.domain.usecase.googleMaps.SearchPlacesUseCase
 import com.example.reshare.presentation.utils.Resource
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,35 +17,51 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RadiusMapViewModel @Inject constructor(
+class ChooseALocationViewModel @Inject constructor(
     private val searchPlacesUseCase: SearchPlacesUseCase,
-    private val getPlaceCoordinatesUseCase: GetPlaceCoordinatesUseCase
+    private val getPlaceCoordinatesUseCase: GetPlaceCoordinatesUseCase,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
-    private val _state = MutableStateFlow(RadiusMapState())
+    private val _state = MutableStateFlow(ChooseALocationState())
     val state = _state.asStateFlow()
 
-    private val _sideEffect = MutableSharedFlow<RadiusMapSideEffect>()
-    val sideEffect: SharedFlow<RadiusMapSideEffect> = _sideEffect
+    private val _sideEffect = MutableSharedFlow<ChooseALocationSideEffect>()
+    val sideEffect: SharedFlow<ChooseALocationSideEffect> = _sideEffect
 
-    fun onEvent(event: RadiusMapUiEvent) {
+    init {
+        viewModelScope.launch {
+            userPreferences.getUserFlow().collect { user ->
+                user?.latitude?.let { lat ->
+                    user.longitude?.let { lng ->
+                        _state.update {
+                            it.copy(selectedLocation = LatLng(lat, lng))
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    fun onEvent(event: ChooseALocationUiEvent) {
         when (event) {
-            is RadiusMapUiEvent.OnQueryChange -> searchPlaces(event.query)
-            is RadiusMapUiEvent.OnSuggestionSelected -> selectPlace(event.placeId)
-            is RadiusMapUiEvent.OnRadiusChange -> updateRadius(event.miles)
-            is RadiusMapUiEvent.OnSuggestionSelectedWithLatLng -> {
+            is ChooseALocationUiEvent.OnQueryChange -> searchPlaces(event.query)
+            is ChooseALocationUiEvent.OnSuggestionSelected -> selectPlace(event.placeId)
+            is ChooseALocationUiEvent.OnRadiusChange -> updateRadius(event.miles)
+            is ChooseALocationUiEvent.OnSuggestionSelectedWithLatLng -> {
                 _state.update {
                     it.copy(
                         selectedLocation = event.latLng,
                         suggestions = emptyList(),
-                        isLoading = false
+                        isRequestingLocation = event.isRequesting
                     )
                 }
                 viewModelScope.launch {
-                    _sideEffect.emit(RadiusMapSideEffect.LocationUpdated)
+                    _sideEffect.emit(ChooseALocationSideEffect.LocationUpdated)
                 }
             }
-            RadiusMapUiEvent.OnApply -> applyRadius()
-            RadiusMapUiEvent.OnClose -> closeScreen()
+            ChooseALocationUiEvent.OnApply -> applyRadius()
+            ChooseALocationUiEvent.OnClose -> closeScreen()
         }
     }
 
@@ -56,7 +74,7 @@ class RadiusMapViewModel @Inject constructor(
                 }
                 is Resource.Error -> {
                     _state.update { it.copy(isLoading = false) }
-                    _sideEffect.emit(RadiusMapSideEffect.ShowError(result.message ?: "Search error"))
+                    _sideEffect.emit(ChooseALocationSideEffect.ShowError(result.message ?: "Search error"))
                 }
                 is Resource.Loading -> Unit
             }
@@ -76,12 +94,12 @@ class RadiusMapViewModel @Inject constructor(
                                 isLoading = false
                             )
                         }
-                        _sideEffect.emit(RadiusMapSideEffect.LocationUpdated)
+                        _sideEffect.emit(ChooseALocationSideEffect.LocationUpdated)
                     }
                 }
                 is Resource.Error -> {
                     _state.update { it.copy(isLoading = false) }
-                    _sideEffect.emit(RadiusMapSideEffect.ShowError(result.message ?: "Coordinate error"))
+                    _sideEffect.emit(ChooseALocationSideEffect.ShowError(result.message ?: "Coordinate error"))
                 }
                 is Resource.Loading -> Unit
             }
@@ -92,13 +110,13 @@ class RadiusMapViewModel @Inject constructor(
         _state.update { it.copy(radiusMiles = miles) }
     }
 
-    private fun applyRadius() {
-        // Logic Apply radius nếu cần gửi về hoặc xử lý thêm
-    }
-
     private fun closeScreen() {
         viewModelScope.launch {
-            _sideEffect.emit(RadiusMapSideEffect.CloseScreen)
+            _sideEffect.emit(ChooseALocationSideEffect.CloseScreen)
         }
+    }
+
+    private fun applyRadius() {
+
     }
 }

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.LocationManager
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.reshare.domain.model.PlaceSuggestion
-import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.RadiusMapUiEvent
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
 import com.google.android.gms.location.LocationCallback
@@ -64,7 +64,6 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.collectLatest
@@ -187,6 +186,12 @@ fun SetYourLocationScreen(
                 onResultClick = { suggestion ->
                     viewModel.onEvent(SetYourLocationUiEvent.OnSuggestionSelected(suggestion.placeId))
                 },
+                onSetLocation = {
+                    viewModel.onEvent(SetYourLocationUiEvent.SetLocation(
+                        state.selectedLocation.latitude, state.selectedLocation.longitude
+                    ))
+                },
+                isLoading = state.isLoading,
                 cameraPositionState = cameraPositionState
             )
         }
@@ -201,6 +206,8 @@ fun LocationSelectorHeader(
     isRequestingLocation: Boolean = false,
     searchResults: List<PlaceSuggestion>,
     onResultClick: (PlaceSuggestion) -> Unit,
+    onSetLocation: () -> Unit,
+    isLoading: Boolean = false,
     cameraPositionState: CameraPositionState
 ) {
 
@@ -323,7 +330,7 @@ fun LocationSelectorHeader(
         }
 
         Button(
-            onClick = {},
+            onClick = { if(!isLoading) onSetLocation() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
@@ -335,6 +342,13 @@ fun LocationSelectorHeader(
             )
         ) {
             Text("Set home location")
+            if (isLoading) {
+                Spacer(modifier = Modifier.width(8.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            }
         }
     }
 }

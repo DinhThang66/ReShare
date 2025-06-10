@@ -9,5 +9,7 @@ data class HomeState(
     val nonFood: List<Product> = emptyList(),
     val reducedFood: List<Product> = emptyList(),
     val want: List<Product> = emptyList(),
-    val error: String = ""
+    val error: String = "",
+
+    val userLocation: String = ""
 )

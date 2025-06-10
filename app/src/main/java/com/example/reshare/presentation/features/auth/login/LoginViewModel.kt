@@ -55,6 +55,9 @@ class LoginViewModel @Inject constructor(
                         lastName = user.lastName,
                         email = user.email,
                         profilePic = user.profilePic,
+                        latitude = user.latitude,
+                        longitude = user.longitude,
+                        hasLocation = result.data.hasLocation,
                         token = token
                     )
                 }

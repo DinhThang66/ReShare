@@ -2,11 +2,11 @@ package com.example.reshare.presentation.features.auth.setYourLocation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.reshare.data.local.UserPreferences
+import com.example.reshare.domain.usecase.auth.UpdateLocationUseCase
 import com.example.reshare.domain.usecase.googleMaps.GetPlaceCoordinatesUseCase
 import com.example.reshare.domain.usecase.googleMaps.SearchPlacesUseCase
-import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.RadiusMapSideEffect
 import com.example.reshare.presentation.utils.Resource
-import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SetYourLocationViewModel @Inject constructor(
     private val searchPlacesUseCase: SearchPlacesUseCase,
-    private val getPlaceCoordinatesUseCase: GetPlaceCoordinatesUseCase
+    private val getPlaceCoordinatesUseCase: GetPlaceCoordinatesUseCase,
+    private val updateLocationUseCase: UpdateLocationUseCase,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
     private val _state = MutableStateFlow(SetYourLocationState())
     val state = _state.asStateFlow()
@@ -34,13 +36,15 @@ class SetYourLocationViewModel @Inject constructor(
                     it.copy(
                         selectedLocation = event.latLng,
                         suggestions = emptyList(),
-                        isLoading = false,
                         isRequestingLocation = event.isRequesting
                     )
                 }
             }
             is SetYourLocationUiEvent.OnZoomChanged -> {
                 _state.update { it.copy(zoomLevel = event.zoom) }
+            }
+            is SetYourLocationUiEvent.SetLocation -> {
+                updateLocation(event.latitude, event.longitude)
             }
         }
     }
@@ -77,6 +81,25 @@ class SetYourLocationViewModel @Inject constructor(
                 }
                 is Resource.Error -> {
                     _state.update { it.copy(isLoading = false) }
+                }
+                is Resource.Loading -> Unit
+            }
+        }
+    }
+
+    private fun updateLocation(latitude: Double, longitude: Double) {
+        _state.update { it.copy(isLoading = true, error = "") }
+        viewModelScope.launch {
+            when (val result = updateLocationUseCase(latitude, longitude)) {
+                is Resource.Success -> {
+                    userPreferences.saveHasLocation(
+                        hasLocation = true,
+                        latitude = latitude, longitude = longitude
+                    )
+                    _state.update { it.copy(isLoading = false) }
+                }
+                is Resource.Error -> { _state.update {
+                    it.copy(isLoading = false, error = result.message?:"") }
                 }
                 is Resource.Loading -> Unit
             }

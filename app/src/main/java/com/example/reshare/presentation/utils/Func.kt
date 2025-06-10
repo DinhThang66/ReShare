@@ -1,6 +1,7 @@
 package com.example.reshare.presentation.utils
 
 import androidx.compose.ui.graphics.Color
+import com.example.reshare.data.remote.dto.GeocodingResult
 import com.example.reshare.ui.theme.BlueD
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
@@ -80,4 +81,14 @@ fun getBadgeStyle(tag: String): BadgeStyle {
         "reduced" -> BadgeStyles.Reduced
         else -> BadgeStyles.Free
     }
+}
+
+fun getStreetOrDistrict(result: GeocodingResult): String? {
+    val components = result.address_components
+
+    val street = components.firstOrNull { "route" in it.types }?.long_name
+    if (!street.isNullOrEmpty()) return street
+
+    val district = components.firstOrNull { "administrative_area_level_2" in it.types }?.long_name
+    return district
 }

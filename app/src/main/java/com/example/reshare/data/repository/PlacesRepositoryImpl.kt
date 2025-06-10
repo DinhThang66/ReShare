@@ -1,9 +1,11 @@
 package com.example.reshare.data.repository
 
+import android.util.Log
 import com.example.reshare.data.remote.GoogleMapsApi
 import com.example.reshare.domain.model.PlaceSuggestion
 import com.example.reshare.domain.repository.PlacesRepository
 import com.example.reshare.presentation.utils.Resource
+import com.example.reshare.presentation.utils.getStreetOrDistrict
 import com.google.android.gms.maps.model.LatLng
 import javax.inject.Inject
 
@@ -38,6 +40,29 @@ class PlacesRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred while getting coordinates")
+        }
+    }
+
+    override suspend fun getReverseGeocoding(
+        latitude: Double,
+        longitude: Double,
+    ): Resource<String> {
+        return try {
+            val latLng = "$latitude,$longitude"
+            val response = api.getReverseGeocoding(latLng, apiKey)
+
+            val result = response.results.firstOrNull()
+            val name = result?.let { getStreetOrDistrict(it) }
+
+            Log.d("result", result.toString())
+            if (name != null) {
+                Resource.Success(name)
+            } else {
+                Resource.Error("Error not found!!")
+            }
+        } catch (e: Exception) {
+            Log.d("result", "oke")
+            Resource.Error(e.localizedMessage ?: "Error reverse geocoding")
         }
     }
 }

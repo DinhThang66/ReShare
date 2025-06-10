@@ -17,4 +17,10 @@ interface GoogleMapsApi {
         @Query("place_id") placeId: String,
         @Query("key") apiKey: String
     ): GeocodingResponse
+
+    @GET("geocode/json")
+    suspend fun getReverseGeocoding(
+        @Query("latlng") latlng: String,
+        @Query("key") apiKey: String
+    ): GeocodingResponse
 }

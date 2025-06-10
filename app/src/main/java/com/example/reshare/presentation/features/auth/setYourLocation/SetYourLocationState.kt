@@ -8,6 +8,8 @@ data class SetYourLocationState (
     val suggestions: List<PlaceSuggestion> = emptyList(),
     val selectedLocation: LatLng = LatLng(21.0049, 105.8431),
     val zoomLevel: Float = 17f,
+    val isRequestingLocation: Boolean = false,
+
     val isLoading: Boolean = false,
-    val isRequestingLocation: Boolean = false
+    val error: String = "",
 )

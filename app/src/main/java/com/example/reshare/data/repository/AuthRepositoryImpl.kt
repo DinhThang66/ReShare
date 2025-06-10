@@ -1,7 +1,9 @@
 package com.example.reshare.data.repository
 
+import android.util.Log
 import com.example.reshare.data.mapper.toDomain
 import com.example.reshare.data.remote.AppApi
+import com.example.reshare.data.remote.dto.LocationRequest
 import com.example.reshare.data.remote.dto.LoginRequest
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.domain.model.AuthResult
@@ -49,6 +51,21 @@ class AuthRepositoryImpl(
                 )
             } else {
                 Resource.Error("Register failed: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Error: $e")
+        }
+    }
+
+    override suspend fun updateLocation(latitude: Double, longitude: Double): Resource<String> {
+        return try {
+            val response = api.updateLocation(
+                LocationRequest(latitude, longitude)
+            )
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success("Success")
+            } else {
+                Resource.Error("Error")
             }
         } catch (e: Exception) {
             Resource.Error("Error: $e")

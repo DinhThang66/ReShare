@@ -80,7 +80,7 @@ fun HomeScreen(
                 .padding(innerPadding)
         ) {
             // Location on
-            LocationOn(navController = navController)
+            LocationOn(navController = navController, userLocation = state.userLocation)
 
             // Loading
             if (state.isLoading) {
@@ -154,6 +154,7 @@ fun HomeScreen(
 @Composable
 fun LocationOn(
     navController: NavHostController,
+    userLocation: String
 ) {
     Column(
         modifier = Modifier
@@ -173,7 +174,7 @@ fun LocationOn(
             )
             Spacer(modifier = Modifier.width(2.dp))
             Text(
-                text = "Ha noi",
+                text = userLocation,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black

@@ -1,5 +1,3 @@
-@file:Suppress("NAME_SHADOWING")
-
 package com.example.reshare.presentation.features.mainGraph.home.chooseALocation
 
 import android.Manifest
@@ -23,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +31,7 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,9 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,10 +54,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.reshare.domain.model.PlaceSuggestion
 import com.example.reshare.ui.theme.DarkPurple
+import com.example.reshare.ui.theme.LightPurple
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -80,9 +78,9 @@ import kotlin.math.cos
     "MissingPermission"
 )
 @Composable
-fun RadiusMapScreen(
+fun ChooseALocationScreen(
     navController: NavController,
-    viewModel: RadiusMapViewModel = hiltViewModel()
+    viewModel: ChooseALocationViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
@@ -109,6 +107,12 @@ fun RadiusMapScreen(
                 return@rememberLauncherForActivityResult
             }
 
+            viewModel.onEvent(
+                ChooseALocationUiEvent.OnSuggestionSelectedWithLatLng(
+                    latLng = state.selectedLocation,
+                    isRequesting = true
+                )
+            )
             // Dùng API LocationRequest.Builder mới
             val locationRequest = LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY,
@@ -123,17 +127,22 @@ fun RadiusMapScreen(
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
                     val location = result.lastLocation
-                    if (location != null) {
-                        val latLng = LatLng(location.latitude, location.longitude)
-                        viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(latLng))
+                    val latLng = if (location != null) {
+                        LatLng(location.latitude, location.longitude)
                     } else {
                         Toast.makeText(
                             context,
                             "Still unable to get current location",
                             Toast.LENGTH_SHORT
                         ).show()
-                        viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelectedWithLatLng(state.selectedLocation)) // fallback
+                        state.selectedLocation
                     }
+                    viewModel.onEvent(
+                        ChooseALocationUiEvent.OnSuggestionSelectedWithLatLng(
+                            latLng = latLng,
+                            isRequesting = false
+                        )
+                    )
                     fusedLocationClient.removeLocationUpdates(this)
                 }
             }
@@ -168,11 +177,11 @@ fun RadiusMapScreen(
     LaunchedEffect(Unit) {
         viewModel.sideEffect.collectLatest { event ->
             when (event) {
-                is RadiusMapSideEffect.ShowError ->
+                is ChooseALocationSideEffect.ShowError ->
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                RadiusMapSideEffect.CloseScreen ->
+                ChooseALocationSideEffect.CloseScreen ->
                     navController.popBackStack()
-                RadiusMapSideEffect.LocationUpdated -> {
+                ChooseALocationSideEffect.LocationUpdated -> {
                     val bounds = calculateBounds(state.selectedLocation, state.radiusMiles * 1609.34f)
                     cameraPositionState.animate(
                         CameraUpdateFactory.newLatLngBounds(bounds, 50)
@@ -181,7 +190,6 @@ fun RadiusMapScreen(
             }
         }
     }
-
     // Initial camera update
     LaunchedEffect(state.selectedLocation, state.radiusMiles) {
         val bounds = calculateBounds(state.selectedLocation, state.radiusMiles * 1609.34f)
@@ -199,12 +207,13 @@ fun RadiusMapScreen(
         Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
             LocationSelectorHeader(
                 query = state.searchQuery,
-                onQueryChange = { viewModel.onEvent(RadiusMapUiEvent.OnQueryChange(it)) },
+                onQueryChange = { viewModel.onEvent(ChooseALocationUiEvent.OnQueryChange(it)) },
                 onClose = { navController.popBackStack() },
                 onUseCurrentLocation = { permissionLauncher.launch(locationPermissions) },
+                isRequestingLocation = state.isRequestingLocation,
                 searchResults = state.suggestions,
                 onResultClick = { suggestion ->
-                    viewModel.onEvent(RadiusMapUiEvent.OnSuggestionSelected(suggestion.placeId))
+                    viewModel.onEvent(ChooseALocationUiEvent.OnSuggestionSelected(suggestion.placeId))
                 }
             )
             GoogleMap(
@@ -227,10 +236,10 @@ fun RadiusMapScreen(
             DistanceSelector(
                 value = state.radiusMiles,
                 onValueChange = {
-                    viewModel.onEvent(RadiusMapUiEvent.OnRadiusChange(it))
+                    viewModel.onEvent(ChooseALocationUiEvent.OnRadiusChange(it))
                 },
                 onApply = {
-                    viewModel.onEvent(RadiusMapUiEvent.OnApply)
+                    viewModel.onEvent(ChooseALocationUiEvent.OnApply)
                 }
             )
         }
@@ -243,6 +252,7 @@ fun LocationSelectorHeader(
     onQueryChange: (String) -> Unit,
     onClose: () -> Unit = {},
     onUseCurrentLocation: () -> Unit = {},
+    isRequestingLocation: Boolean = false,
     searchResults: List<PlaceSuggestion>,
     onResultClick: (PlaceSuggestion) -> Unit
 ) {
@@ -319,21 +329,28 @@ fun LocationSelectorHeader(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onUseCurrentLocation() },
+                    .clickable { if(!isRequestingLocation) onUseCurrentLocation() },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.MyLocation,
                     contentDescription = "Use current location",
-                    tint = DarkPurple
+                    tint = if (!isRequestingLocation ) DarkPurple else LightPurple
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Or use current location",
-                    color = DarkPurple,
+                    color = if (!isRequestingLocation ) DarkPurple else LightPurple,
                     fontWeight = FontWeight.Medium
                 )
+                if (isRequestingLocation) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
             }
         }
     }
