@@ -84,12 +84,13 @@ class ProductRepositoryImpl (
     }
 
     override suspend fun getNearbyProducts(
-        forceFetchFromRemote: Boolean
+        forceFetchFromRemote: Boolean,
+        query: String?
     ): Flow<Resource<List<Product>>> =  flow {
         emit(Resource.Loading(true))
 
         val productsFromApi = try {
-            api.getAllNearbyProducts()
+            api.getAllNearbyProducts(query)
         }catch (e: IOException) {
             emit(Resource.Error("Network error: ${e.message}"))
             emit(Resource.Loading(false))

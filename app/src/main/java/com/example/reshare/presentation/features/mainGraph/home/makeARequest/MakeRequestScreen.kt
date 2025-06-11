@@ -2,7 +2,7 @@ package com.example.reshare.presentation.features.mainGraph.home.makeARequest
 
 import android.app.Activity
 import android.view.WindowManager
-import androidx.compose.foundation.Image
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +28,8 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -38,10 +38,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,20 +51,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.reshare.R
+import com.example.reshare.domain.model.Product
 import com.example.reshare.ui.theme.DarkPurple
-import com.example.reshare.ui.theme.DarkYellow
 import com.example.reshare.ui.theme.Pink
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MakeRequestScreen(
     navController: NavController,
+    viewModel: MakeRequestViewModel = hiltViewModel()
 ) {
-    var pickupTime by remember { mutableStateOf("") }
-    val isError = pickupTime.isBlank()
-    var optionalMessage by remember { mutableStateOf("") }
+    val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -74,53 +73,35 @@ fun MakeRequestScreen(
         @Suppress("DEPRECATION")
         activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     }
+    // Set product
+    LaunchedEffect(Unit) {
+        val savedProduct = navController.previousBackStackEntry
+            ?.savedStateHandle
+            ?.get<Product>("product")
+        savedProduct?.let {
+            viewModel.onEvent(MakeRequestUiEvent.SetProduct(it))
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.remove<Product>("product")
+        }
+    }
+    LaunchedEffect(state.success, state.error) {
+        if (state.success) {
+            Toast.makeText(context, "Request sent successfully", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
+        if (state.error.isNotBlank()) {
+            Toast.makeText(context, "Error: ${state.error}", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
+    }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Make a Request",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        @Suppress("DEPRECATION")
-                        (Icon(
-        Icons.Default.ArrowBack,
-        contentDescription = "Back"
-    ))
-                    }
-                },
-                modifier = Modifier.shadow(2.dp)
-            )
-        },
-        bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(16.dp)
-            ) {
-                Button(
-                    onClick = { },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = DarkPurple,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(50)
-                ) {
-                    Text(
-                        text = "Send Request",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
+        topBar = { TopBarCustom(onClick = { navController.popBackStack() }) },
+        bottomBar = { BottomBarCustom(onClick = { state.product?.let{
+            viewModel.onEvent(MakeRequestUiEvent.SubmitRequest(it.id)) }},
+            isLoading = state.isLoading
+        )}
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -130,95 +111,104 @@ fun MakeRequestScreen(
                 .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
-            ProductInfoRow(
-                imageRes = R.drawable.img_1,
-                title = "Sliced Bread, Half & half, white tiger loaf",
-                storeName = "Tesco"
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PostHeaderInfo(
-                avatarRes = R.drawable.img,
-                rating = "4.7",
-                giverName = "Carol",
-                pickupTimes = "Pick up by 7pm today or 10 to 12pm tomorrow."
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PickupTimeInputField(
-                value = pickupTime,
-                onValueChange = { pickupTime = it },
-                isError = isError,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OptionalMessageInputField(
-                value = optionalMessage,
-                onValueChange = { optionalMessage = it }
-            )
-        }
-    }
-}
-
-@Composable
-fun ProductInfoRow(
-    imageRes: Int,
-    title: String,
-    storeName: String,
-    storeLabelColor: Color = Color.Red
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = null,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                maxLines = 1,
-                color = Color.Black,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = storeName.uppercase(),
-                    color = storeLabelColor,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+            state.product?.let{ product ->
+                PostHeaderInfo(
+                    avatar = product.createdBy.profilePic,
+                    rating = "5.0",
+                    giverName = product.createdBy.firstName,
+                    pickupTimes = product.pickupTimes
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "From $storeName",
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                Spacer(modifier = Modifier.height(16.dp))
+
+                PickupTimeInputField(
+                    value = state.pickupTime,
+                    onValueChange = { viewModel.onEvent(MakeRequestUiEvent.PickupTimeChanged(it)) },
+                    isError = state.error.contains("Pickup time", ignoreCase = true),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OptionalMessageInputField(
+                    value = state.message,
+                    onValueChange = {
+                        viewModel.onEvent(MakeRequestUiEvent.MessageChanged(it))
+                    }
                 )
             }
         }
     }
+}
 
-    HorizontalDivider()
+
+
+
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarCustom(
+    onClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = "Make a Request",
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onClick) {
+                @Suppress("DEPRECATION")
+                (Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back"
+                ))
+            }
+        },
+        modifier = Modifier.shadow(2.dp)
+    )
+}
+
+@Composable
+fun BottomBarCustom(
+    onClick: () -> Unit,
+    isLoading: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(16.dp)
+    ) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = DarkPurple,
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(50)
+        ) {
+            Text(
+                text = "Send Request",
+                fontWeight = FontWeight.SemiBold
+            )
+            if (isLoading) {
+                Spacer(modifier = Modifier.width(8.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            }
+        }
+    }
 }
 
 @Composable
 fun PostHeaderInfo(
-    avatarRes: Int,
+    avatar: String,
     rating: String,
     giverName: String,
     pickupTimes: String
@@ -232,14 +222,16 @@ fun PostHeaderInfo(
         Box(modifier = Modifier
             .size(48.dp)
             .offset(y = (-10).dp)) {
-            Image(
-                painter = painterResource(id = avatarRes),
+            AsyncImage(
+                model = avatar,
                 contentDescription = "Avatar",
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(Color.LightGray),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.user),
+                error = painterResource(R.drawable.user)
             )
 
             // Rating badge
@@ -324,7 +316,7 @@ fun PickupTimeInputField(
             isError = isError,
             singleLine = true,
             shape = RoundedCornerShape(8.dp),
-            placeholder = { Text(text = "Time you can collect",) },
+            placeholder = { Text(text = "Time you can collect") },
             supportingText = {
                 if (isError) {
                     Row(
@@ -418,3 +410,63 @@ fun OptionalMessageInputField(
         )
     }
 }
+
+
+/*
+@Composable
+fun ProductInfoRow(
+    imageRes: Int,
+    title: String,
+    storeName: String,
+    storeLabelColor: Color = Color.Red
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                maxLines = 1,
+                color = Color.Black,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = storeName.uppercase(),
+                    color = storeLabelColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "From $storeName",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+        }
+    }
+
+    HorizontalDivider()
+}
+ */
+

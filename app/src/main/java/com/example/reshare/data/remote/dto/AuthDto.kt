@@ -11,7 +11,8 @@ data class UserDto(
     val lastName: String,
     val email: String,
     val profilePic: String,
-    val location: Location?
+    val location: LocationDto?,
+    val radius: Float
 )
 
 data class LocationDto(
@@ -44,5 +45,6 @@ data class UpdateLocationDto(
 
 data class LocationRequest(
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    val radius: Float? = null
 )

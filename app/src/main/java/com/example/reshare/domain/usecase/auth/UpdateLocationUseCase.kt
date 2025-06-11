@@ -7,7 +7,7 @@ import javax.inject.Inject
 class UpdateLocationUseCase  @Inject constructor(
     private val repository: AuthRepository
 ) {
-    suspend operator fun invoke(latitude: Double, longitude: Double): Resource<String> {
-        return repository.updateLocation(latitude, longitude)
+    suspend operator fun invoke(latitude: Double, longitude: Double, radius: Float? = null): Resource<String> {
+        return repository.updateLocation(latitude, longitude, radius)
     }
 }

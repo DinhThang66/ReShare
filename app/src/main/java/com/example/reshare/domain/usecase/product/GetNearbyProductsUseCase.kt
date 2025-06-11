@@ -10,8 +10,9 @@ class GetNearbyProductsUseCase @Inject constructor(
     private val repository: ProductRepository
 ) {
     suspend operator fun invoke(
-        forceFetchFromRemote: Boolean
+        forceFetchFromRemote: Boolean,
+        query: String? = null
     ): Flow<Resource<List<Product>>> {
-        return repository.getNearbyProducts(forceFetchFromRemote)
+        return repository.getNearbyProducts(forceFetchFromRemote, query)
     }
 }

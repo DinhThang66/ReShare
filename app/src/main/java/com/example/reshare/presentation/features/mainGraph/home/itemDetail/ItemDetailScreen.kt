@@ -104,6 +104,9 @@ fun ItemDetailScreen(
             ?.get<Product>("product")
         savedProduct?.let {
             viewModel.onEvent(ItemDetailUiEvent.SetProduct(it))
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.remove<Product>("product")
         }
     }
 
@@ -167,10 +170,14 @@ fun ItemDetailScreen(
                 )
             }
 
-
             Spacer(modifier = Modifier.height(20.dp))
             Button(
-                onClick = { navController.navigate(Screen.MakeARequest.route) },
+                onClick = {
+                    navController.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("product", product)
+                    navController.navigate(Screen.MakeARequest.route)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)

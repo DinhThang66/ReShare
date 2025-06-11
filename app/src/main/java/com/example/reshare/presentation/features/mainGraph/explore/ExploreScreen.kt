@@ -12,8 +12,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
@@ -33,15 +39,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.reshare.presentation.features.mainGraph.explore.listPager.ExploreListPager
 import com.example.reshare.presentation.features.mainGraph.explore.mapPager.ExploreMapPager
+import com.example.reshare.presentation.features.mainGraph.home.HomeUiEvent
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ExploreScreen(
     innerPadding: PaddingValues,
@@ -49,93 +59,112 @@ fun ExploreScreen(
     viewModel: ExploreViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-
     val pagerState = rememberPagerState( pageCount = { 2 } )
     val coroutineScope = rememberCoroutineScope()
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state.isLoading,
+        onRefresh = { viewModel.onEvent(ExploreUiEvent.Refresh) }
+    )
 
     var searchText by rememberSaveable { mutableStateOf("") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(innerPadding)
+            .pullRefresh(pullRefreshState)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(LightPurple)
-                .padding(horizontal = 16.dp)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(innerPadding)
         ) {
-            SearchBar(
-                value = searchText,
-                onValueChange = {searchText = it}
-            )
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                containerColor = Color.Transparent,
-                contentColor = DarkPurple,
-                divider = {},
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                        height = 2.dp,
-                        color = DarkPurple
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(LightPurple)
+                    .padding(horizontal = 16.dp)
+            ) {
+                SearchBar(
+                    value = searchText,
+                    onValueChange = {searchText = it},
+                    onSearch = {
+                        viewModel.onEvent(ExploreUiEvent.Search(searchText))
+                    }
+                )
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    containerColor = Color.Transparent,
+                    contentColor = DarkPurple,
+                    divider = {},
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                            height = 2.dp,
+                            color = DarkPurple
+                        )
+                    }
+                ) {
+                    Tab(
+                        selected = pagerState.currentPage == 0,
+                        text = {
+                            Text("List")
+                        },
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(0)
+                            }
+                        }
+                    )
+                    Tab(
+                        selected = pagerState.currentPage == 1,
+                        text = {
+                            Text("Map")
+                        },
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        }
                     )
                 }
-            ) {
-                Tab(
-                    selected = pagerState.currentPage == 0,
-                    text = {
-                        Text("List")
-                    },
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(0)
-                        }
-                    }
-                )
-                Tab(
-                    selected = pagerState.currentPage == 1,
-                    text = {
-                        Text("Map")
-                    },
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(1)
-                        }
-                    }
-                )
             }
-        }
 
-        // Content
-        when {
-            state.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            // Content
+            when {
+                state.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
 
-            state.error.isNotBlank() ->{
-                Text("Lỗi: ${state.error}", color = Color.Red)
-            }
-            else -> {
-                HorizontalPager(
-                    state = pagerState,
-                    userScrollEnabled = false
-                ) {page ->
-                    when(page) {
-                        0 -> ExploreListPager(navController = navController, products = state.products)
-                        1 -> ExploreMapPager(products = state.products)
+                state.error.isNotBlank() ->{
+                    Text("Lỗi: ${state.error}", color = Color.Red)
+                }
+                else -> {
+                    HorizontalPager(
+                        state = pagerState,
+                        userScrollEnabled = false
+                    ) {page ->
+                        when(page) {
+                            0 -> ExploreListPager(navController = navController, products = state.products)
+                            1 -> ExploreMapPager(products = state.products)
+                        }
                     }
                 }
             }
         }
+
+        // Pull-to-refresh indicator
+        PullRefreshIndicator(
+            refreshing = state.isLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
@@ -144,7 +173,10 @@ fun SearchBar(
     modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
+    onSearch: (String) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -164,6 +196,16 @@ fun SearchBar(
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         ),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        maxLines = 1,
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                keyboardController?.hide()           // Ẩn bàn phím
+                onSearch(value)                      // Gọi callback tìm kiếm
+            }
+        )
     )
 }

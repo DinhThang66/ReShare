@@ -13,5 +13,8 @@ interface AuthRepository {
         password: String
     ): Resource<AuthResult>
 
-    suspend fun updateLocation(latitude: Double, longitude: Double): Resource<String>
+    suspend fun updateLocation(
+        latitude: Double, longitude: Double,
+        radius: Float? = null
+    ): Resource<String>
 }

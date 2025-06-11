@@ -8,10 +8,13 @@ import com.example.reshare.ui.theme.LightPurple
 import com.example.reshare.ui.theme.MilkM
 import com.example.reshare.ui.theme.OrangeM
 import com.example.reshare.ui.theme.YellowD
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.cos
 
 fun isTokenExpired(token: String): Boolean {
     return try {
@@ -91,4 +94,17 @@ fun getStreetOrDistrict(result: GeocodingResult): String? {
 
     val district = components.firstOrNull { "administrative_area_level_2" in it.types }?.long_name
     return district
+}
+
+fun calculateBounds(center: LatLng, radiusMeters: Float): LatLngBounds {
+    val lat = center.latitude
+    val lng = center.longitude
+
+    val latOffset = radiusMeters / 111000f // ~111km per degree latitude
+    val lngOffset = radiusMeters / (111000f * cos(Math.toRadians(lat))) // correct for longitude shrinking
+
+    val southwest = LatLng(lat - latOffset, lng - lngOffset)
+    val northeast = LatLng(lat + latOffset, lng + lngOffset)
+
+    return LatLngBounds(southwest, northeast)
 }

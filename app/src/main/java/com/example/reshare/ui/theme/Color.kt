@@ -31,6 +31,9 @@ val MilkM = Color(0xfffcfce4)
 val DarkYellow = Color(0xffeac129)
 val Pink = Color(0xfffa4a6b)
 
+val BlueBorder = Color(0xFF4285F4)
+val BlueFill = Color(0x334285F4)
+
 val ColorScheme.focusedTextFieldText
     @Composable
     get() = if (isSystemInDarkTheme()) Color.White else Color.Black

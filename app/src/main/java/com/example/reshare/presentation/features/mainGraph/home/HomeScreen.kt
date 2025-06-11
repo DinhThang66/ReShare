@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -27,18 +26,13 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,13 +43,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.components.HomeItemCard
-import com.example.reshare.presentation.features.mainGraph.community.CommunityUiEvent
-import com.example.reshare.presentation.features.mainGraph.community.CommunityViewModel
 import com.example.reshare.presentation.utils.Screen
-import com.example.reshare.presentation.utils.sectionTitles
 import com.example.reshare.ui.theme.LightPurple
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
@@ -67,6 +58,18 @@ fun HomeScreen(
         refreshing = state.isLoading,
         onRefresh = { viewModel.onEvent(HomeUiEvent.Refresh) }
     )
+
+    // Bắt sự kiện thay đổi lng, lat, radius từ chooseALocation
+    val currentBackStackEntry = navController.currentBackStackEntry
+    val savedStateHandle = currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.getLiveData<Boolean>("refresh")?.observeForever { shouldRefresh ->
+            if (shouldRefresh == true) {
+                viewModel.onEvent(HomeUiEvent.Refresh)
+                savedStateHandle["refresh"] = false // Reset flag để tránh gọi lại
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -80,7 +83,11 @@ fun HomeScreen(
                 .padding(innerPadding)
         ) {
             // Location on
-            LocationOn(navController = navController, userLocation = state.userLocation)
+            LocationOn(
+                navController = navController,
+                userLocation = state.userLocation,
+                radius = state.radius
+            )
 
             // Loading
             if (state.isLoading) {
@@ -154,7 +161,8 @@ fun HomeScreen(
 @Composable
 fun LocationOn(
     navController: NavHostController,
-    userLocation: String
+    userLocation: String,
+    radius: Float
 ) {
     Column(
         modifier = Modifier
@@ -188,7 +196,7 @@ fun LocationOn(
             )
         }
         Text(
-            text = "Listings within 3km",
+            text = "Listings within $radius km",
             fontWeight = FontWeight.Light,
             fontSize = 12.sp,
             color = Color.Black,

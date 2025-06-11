@@ -1,8 +1,10 @@
 package com.example.reshare.presentation.features.mainGraph.home.chooseALocation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.data.local.UserPreferences
+import com.example.reshare.domain.usecase.auth.UpdateLocationUseCase
 import com.example.reshare.domain.usecase.googleMaps.GetPlaceCoordinatesUseCase
 import com.example.reshare.domain.usecase.googleMaps.SearchPlacesUseCase
 import com.example.reshare.presentation.utils.Resource
@@ -20,6 +22,7 @@ import javax.inject.Inject
 class ChooseALocationViewModel @Inject constructor(
     private val searchPlacesUseCase: SearchPlacesUseCase,
     private val getPlaceCoordinatesUseCase: GetPlaceCoordinatesUseCase,
+    private val updateLocationUseCase: UpdateLocationUseCase,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
     private val _state = MutableStateFlow(ChooseALocationState())
@@ -29,25 +32,15 @@ class ChooseALocationViewModel @Inject constructor(
     val sideEffect: SharedFlow<ChooseALocationSideEffect> = _sideEffect
 
     init {
-        viewModelScope.launch {
-            userPreferences.getUserFlow().collect { user ->
-                user?.latitude?.let { lat ->
-                    user.longitude?.let { lng ->
-                        _state.update {
-                            it.copy(selectedLocation = LatLng(lat, lng))
-                        }
-
-                    }
-                }
-            }
-        }
+        setLngLat()
+        setRadius()
     }
 
     fun onEvent(event: ChooseALocationUiEvent) {
         when (event) {
             is ChooseALocationUiEvent.OnQueryChange -> searchPlaces(event.query)
             is ChooseALocationUiEvent.OnSuggestionSelected -> selectPlace(event.placeId)
-            is ChooseALocationUiEvent.OnRadiusChange -> updateRadius(event.miles)
+            is ChooseALocationUiEvent.OnRadiusChange -> updateRadius(event.km)
             is ChooseALocationUiEvent.OnSuggestionSelectedWithLatLng -> {
                 _state.update {
                     it.copy(
@@ -60,7 +53,7 @@ class ChooseALocationViewModel @Inject constructor(
                     _sideEffect.emit(ChooseALocationSideEffect.LocationUpdated)
                 }
             }
-            ChooseALocationUiEvent.OnApply -> applyRadius()
+            is ChooseALocationUiEvent.OnApply -> applyRadius(event.latLng, event.km)
             ChooseALocationUiEvent.OnClose -> closeScreen()
         }
     }
@@ -106,8 +99,30 @@ class ChooseALocationViewModel @Inject constructor(
         }
     }
 
-    private fun updateRadius(miles: Float) {
-        _state.update { it.copy(radiusMiles = miles) }
+    private fun updateRadius(km: Float) {
+        _state.update { it.copy(radiusKm = km) }
+    }
+
+    private fun setLngLat() {
+        viewModelScope.launch {
+            userPreferences.getUserFlow().collect { user ->
+                val lat = user?.latitude
+                val lng = user?.longitude
+                if (lat != null && lng != null) {
+                    _state.update { it.copy(selectedLocation = LatLng(lat, lng)) }
+                }
+            }
+        }
+    }
+
+    private fun setRadius() {
+        viewModelScope.launch {
+            userPreferences.getUserFlow().collect { user ->
+                val radius = user?.radius
+                if (radius != null)
+                    _state.update { it.copy(radiusKm = radius) }
+            }
+        }
     }
 
     private fun closeScreen() {
@@ -116,7 +131,30 @@ class ChooseALocationViewModel @Inject constructor(
         }
     }
 
-    private fun applyRadius() {
+    private fun applyRadius(latLng: LatLng, km: Float) {
+        _state.update { it.copy(isLoading = true, error = "") }
+        viewModelScope.launch {
 
+            when (val result =
+                updateLocationUseCase(
+                    latitude = latLng.latitude, longitude = latLng.longitude,
+                    radius = km
+                )
+            ) {
+                is Resource.Success -> {
+                    userPreferences.saveHasLocation(
+                        hasLocation = true,
+                        latitude = latLng.latitude, longitude = latLng.longitude,
+                        radius = km
+                    )
+                    _state.update { it.copy(isLoading = false) }
+                    _sideEffect.emit(ChooseALocationSideEffect.LocationUpdatedAndClose)
+                }
+                is Resource.Error -> { _state.update {
+                    it.copy(isLoading = false, error = result.message?:"") }
+                }
+                is Resource.Loading -> Unit
+            }
+        }
     }
 }

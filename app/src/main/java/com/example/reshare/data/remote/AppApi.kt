@@ -13,6 +13,8 @@ import com.example.reshare.data.remote.dto.PostListDto
 import com.example.reshare.data.remote.dto.ProductListDto
 import com.example.reshare.data.remote.dto.RegisterDto
 import com.example.reshare.data.remote.dto.RegisterRequest
+import com.example.reshare.data.remote.dto.RequestResponseDto
+import com.example.reshare.data.remote.dto.SendRequestBody
 import com.example.reshare.data.remote.dto.StreamTokenDto
 import com.example.reshare.data.remote.dto.UpdateLocationDto
 import com.example.reshare.data.remote.dto.UserDto
@@ -68,7 +70,15 @@ interface AppApi {
     @GET("api/product/categorized")
     suspend fun getCategorizedProducts(): CategorizedProductDto
     @GET("api/product")
-    suspend fun getAllNearbyProducts(): ProductListDto
+    suspend fun getAllNearbyProducts(
+        @Query("q") query: String? = null
+    ): ProductListDto
+
+    // Request Endpoint
+    @POST("api/requests")
+    suspend fun sendProductRequest(
+        @Body request: SendRequestBody
+    ): Response<RequestResponseDto>
 
     companion object {
         const val BASE_URL = ApiConstants.BASE_URL

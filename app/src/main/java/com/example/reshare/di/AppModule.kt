@@ -13,12 +13,14 @@ import com.example.reshare.data.repository.ChatRepositoryImpl
 import com.example.reshare.data.repository.CommentRepositoryImpl
 import com.example.reshare.data.repository.PostRepositoryImpl
 import com.example.reshare.data.repository.ProductRepositoryImpl
+import com.example.reshare.data.repository.RequestsRepositoryImpl
 import com.example.reshare.data.repository.UserRepositoryImpl
 import com.example.reshare.domain.repository.AuthRepository
 import com.example.reshare.domain.repository.ChatRepository
 import com.example.reshare.domain.repository.CommentRepository
 import com.example.reshare.domain.repository.PostRepository
 import com.example.reshare.domain.repository.ProductRepository
+import com.example.reshare.domain.repository.RequestsRepository
 import com.example.reshare.domain.repository.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -34,28 +36,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
-    /*
-    private val interceptor: HttpLoggingInterceptor = HttpLoggingInterceptor()
-        .apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-
-    private val client: OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(interceptor)
-        .build()
-
-    @Provides
-    fun provideAuthApi(): AppApi {
-        return Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(AppApi.BASE_URL)
-            .client(client)
-            .build()
-            .create(AppApi::class.java)
-    }
-     */
-
     @Provides
     @Singleton
     fun provideUserPreferences(@ApplicationContext context: Context): UserPreferences {
@@ -139,5 +119,9 @@ object AppModule {
     @Provides
     fun provideProductRepository(api: AppApi, dao: ProductDao): ProductRepository {
         return ProductRepositoryImpl(api, dao)
+    }
+    @Provides
+    fun provideRequestsRepository(api: AppApi): RequestsRepository {
+        return RequestsRepositoryImpl(api)
     }
 }

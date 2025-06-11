@@ -3,9 +3,17 @@ package com.example.reshare.presentation.features.mainGraph.explore.mapPager
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.reshare.domain.model.Product
+import com.example.reshare.presentation.utils.calculateBounds
+import com.example.reshare.ui.theme.BlueBorder
+import com.example.reshare.ui.theme.BlueFill
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
@@ -17,11 +25,19 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun ExploreMapPager(
-    products: List<Product>
+    products: List<Product>,
+    viewModel: ExploreMapViewModel = hiltViewModel()
 ) {
-    val location = LatLng(21.005403, 105.843048)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(location, 15f)
+    val state by viewModel.state.collectAsState()
+
+    val cameraPositionState = rememberCameraPositionState()
+
+    // Initial camera update
+    LaunchedEffect(state.selectedLocation, state.radius) {
+        val bounds = calculateBounds(state.selectedLocation, state.radius * 1000f)
+        cameraPositionState.animate(
+            CameraUpdateFactory.newLatLngBounds(bounds, 50)
+        )
     }
 
     GoogleMap(
@@ -43,12 +59,11 @@ fun ExploreMapPager(
         }
 
         Circle(
-            center = location,
-            radius = 5000.0,
-            fillColor = Color(0x443F0071), // semi-transparent fill
-            strokeColor = Color(0xFF3F0071),
+            center = state.selectedLocation,
+            radius = (state.radius * 1000f).toDouble(),
+            fillColor = BlueFill,
+            strokeColor = BlueBorder,
             strokeWidth = 2f
         )
     }
-
 }

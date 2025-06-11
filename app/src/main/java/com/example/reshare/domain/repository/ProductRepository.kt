@@ -11,6 +11,7 @@ interface ProductRepository {
     ): Flow<Resource<CategorizedProducts>>
 
     suspend fun getNearbyProducts(
-        forceFetchFromRemote: Boolean
+        forceFetchFromRemote: Boolean,
+        query: String? = null
     ): Flow<Resource<List<Product>>>
 }

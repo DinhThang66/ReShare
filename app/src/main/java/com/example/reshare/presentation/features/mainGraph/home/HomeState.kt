@@ -11,5 +11,6 @@ data class HomeState(
     val want: List<Product> = emptyList(),
     val error: String = "",
 
-    val userLocation: String = ""
+    val userLocation: String = "",
+    val radius: Float = 3f
 )

@@ -1,5 +1,6 @@
 package com.example.reshare.presentation.features.auth.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.data.local.UserPreferences
@@ -49,6 +50,7 @@ class LoginViewModel @Inject constructor(
                     _state.update {
                         it.copy(isLoading = false, token = token)
                     }
+                    Log.d("result", user.toString())
                     userPreferences.saveUser(
                         id = user.id,
                         firstName = user.firstName,
@@ -58,7 +60,8 @@ class LoginViewModel @Inject constructor(
                         latitude = user.latitude,
                         longitude = user.longitude,
                         hasLocation = result.data.hasLocation,
-                        token = token
+                        token = token,
+                        radius = user.radius
                     )
                 }
                 is Resource.Error -> {

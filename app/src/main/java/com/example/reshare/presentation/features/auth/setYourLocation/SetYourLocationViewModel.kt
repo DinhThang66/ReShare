@@ -94,7 +94,8 @@ class SetYourLocationViewModel @Inject constructor(
                 is Resource.Success -> {
                     userPreferences.saveHasLocation(
                         hasLocation = true,
-                        latitude = latitude, longitude = longitude
+                        latitude = latitude, longitude = longitude,
+                        radius = 3f
                     )
                     _state.update { it.copy(isLoading = false) }
                 }

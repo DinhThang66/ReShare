@@ -23,7 +23,8 @@ fun UserDto.toDomain(): User {
         email = email,
         profilePic = profilePic,
         latitude = location?.coordinates?.getOrNull(1),
-        longitude = location?.coordinates?.getOrNull(0)
+        longitude = location?.coordinates?.getOrNull(0),
+        radius = radius
     )
 }
 

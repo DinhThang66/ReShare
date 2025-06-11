@@ -30,6 +30,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadProducts()
         loadUserLocation()
+        loadRadius()
     }
     fun onEvent(event: HomeUiEvent) {
         when (event) {
@@ -73,8 +74,10 @@ class HomeViewModel @Inject constructor(
     private fun loadUserLocation() {
         viewModelScope.launch {
             userPreferences.getUserFlow().collect { user ->
-                val lat = user?.latitude
-                val lng = user?.longitude
+                    val lat = user?.latitude
+                    val lng = user?.longitude
+
+                Log.d("result", "$lat $lng")
 
                 if (lat != null && lng != null) {
                     when (val result = getReverseGeocodingUseCase(lat, lng)) {
@@ -89,6 +92,16 @@ class HomeViewModel @Inject constructor(
                         else -> Unit
                     }
                 }
+            }
+        }
+    }
+
+    private fun loadRadius() {
+        viewModelScope.launch {
+            userPreferences.getUserFlow().collect { user ->
+                val radius = user?.radius
+                if (radius != null)
+                    _state.update { it.copy(radius = radius) }
             }
         }
     }

@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.reshare.domain.model.PlaceSuggestion
+import com.example.reshare.presentation.utils.Screen
+import com.example.reshare.presentation.utils.calculateBounds
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
 import com.google.android.gms.location.LocationCallback
@@ -179,20 +181,23 @@ fun ChooseALocationScreen(
             when (event) {
                 is ChooseALocationSideEffect.ShowError ->
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                ChooseALocationSideEffect.CloseScreen ->
-                    navController.popBackStack()
-                ChooseALocationSideEffect.LocationUpdated -> {
-                    val bounds = calculateBounds(state.selectedLocation, state.radiusMiles * 1609.34f)
+                is ChooseALocationSideEffect.CloseScreen -> navController.popBackStack()
+                is ChooseALocationSideEffect.LocationUpdated -> {
+                    val bounds = calculateBounds(state.selectedLocation, state.radiusKm * 1000f)
                     cameraPositionState.animate(
                         CameraUpdateFactory.newLatLngBounds(bounds, 50)
                     )
+                }
+                is ChooseALocationSideEffect.LocationUpdatedAndClose -> {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+                    navController.popBackStack()
                 }
             }
         }
     }
     // Initial camera update
-    LaunchedEffect(state.selectedLocation, state.radiusMiles) {
-        val bounds = calculateBounds(state.selectedLocation, state.radiusMiles * 1609.34f)
+    LaunchedEffect(state.selectedLocation, state.radiusKm) {
+        val bounds = calculateBounds(state.selectedLocation, state.radiusKm * 1000f)
         cameraPositionState.animate(
             CameraUpdateFactory.newLatLngBounds(bounds, 50)
         )
@@ -221,12 +226,10 @@ fun ChooseALocationScreen(
                 cameraPositionState = cameraPositionState
             ) {
                 Marker(
-                    state = MarkerState(position = state.selectedLocation),
-                    title = "Luân Đôn"
-                )
+                    state = MarkerState(position = state.selectedLocation))
                 Circle(
                     center = state.selectedLocation,
-                    radius = (state.radiusMiles * 1609.34f).toDouble(),
+                    radius = (state.radiusKm * 1000f).toDouble(),
                     fillColor = Color(0x334285F4), // Semi-transparent purple
                     strokeColor = Color(0xFF4285F4),
                     strokeWidth = 2f
@@ -234,13 +237,14 @@ fun ChooseALocationScreen(
             }
 
             DistanceSelector(
-                value = state.radiusMiles,
+                value = state.radiusKm,
                 onValueChange = {
                     viewModel.onEvent(ChooseALocationUiEvent.OnRadiusChange(it))
                 },
                 onApply = {
-                    viewModel.onEvent(ChooseALocationUiEvent.OnApply)
-                }
+                    viewModel.onEvent(ChooseALocationUiEvent.OnApply(state.selectedLocation, state.radiusKm))
+                },
+                isLoading = state.isLoading
             )
         }
     }
@@ -361,7 +365,8 @@ fun LocationSelectorHeader(
 fun DistanceSelector(
     value: Float,
     onValueChange: (Float) -> Unit,
-    onApply: () -> Unit
+    onApply: () -> Unit,
+    isLoading: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -405,19 +410,14 @@ fun DistanceSelector(
             )
         ) {
             Text("Apply")
+
+            if (isLoading) {
+                Spacer(modifier = Modifier.width(8.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            }
         }
     }
-}
-
-fun calculateBounds(center: LatLng, radiusMeters: Float): LatLngBounds {
-    val lat = center.latitude
-    val lng = center.longitude
-
-    val latOffset = radiusMeters / 111000f // ~111km per degree latitude
-    val lngOffset = radiusMeters / (111000f * cos(Math.toRadians(lat))) // correct for longitude shrinking
-
-    val southwest = LatLng(lat - latOffset, lng - lngOffset)
-    val northeast = LatLng(lat + latOffset, lng + lngOffset)
-
-    return LatLngBounds(southwest, northeast)
 }

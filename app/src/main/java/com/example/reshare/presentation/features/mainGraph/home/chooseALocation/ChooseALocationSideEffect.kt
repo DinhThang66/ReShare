@@ -4,4 +4,5 @@ sealed class ChooseALocationSideEffect {
     data class ShowError(val message: String) : ChooseALocationSideEffect()
     data object CloseScreen : ChooseALocationSideEffect()
     data object LocationUpdated : ChooseALocationSideEffect()
+    data object LocationUpdatedAndClose : ChooseALocationSideEffect()
 }

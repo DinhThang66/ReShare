@@ -57,10 +57,10 @@ class AuthRepositoryImpl(
         }
     }
 
-    override suspend fun updateLocation(latitude: Double, longitude: Double): Resource<String> {
+    override suspend fun updateLocation(latitude: Double, longitude: Double, radius: Float?): Resource<String> {
         return try {
             val response = api.updateLocation(
-                LocationRequest(latitude, longitude)
+                LocationRequest(latitude, longitude, radius)
             )
             if (response.isSuccessful && response.body() != null) {
                 Resource.Success("Success")

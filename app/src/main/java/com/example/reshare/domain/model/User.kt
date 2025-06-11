@@ -11,5 +11,6 @@ data class User (
     val email: String,
     val profilePic: String,
     val latitude: Double?,
-    val longitude: Double?
+    val longitude: Double?,
+    val radius: Float
 ): Parcelable

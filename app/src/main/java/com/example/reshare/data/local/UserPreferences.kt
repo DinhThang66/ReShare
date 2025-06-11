@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.reshare.domain.model.User
@@ -30,6 +31,8 @@ class UserPreferences @Inject constructor(
 
         val TOKEN = stringPreferencesKey("token")
         val STREAM_TOKEN = stringPreferencesKey("stream_token")
+
+        val RADIUS = floatPreferencesKey("radius")
     }
 
     val userId: Flow<String?> = context.dataStore.data.map { it[ID] }
@@ -45,6 +48,8 @@ class UserPreferences @Inject constructor(
     val userToken: Flow<String?> = context.dataStore.data.map { it[TOKEN] }
     val streamToken: Flow<String?> = context.dataStore.data.map { it[STREAM_TOKEN] }
 
+    val radius: Flow<Float?> = context.dataStore.data.map { it[RADIUS] }
+
     suspend fun saveUser(
         id: String,
         firstName: String,
@@ -54,7 +59,8 @@ class UserPreferences @Inject constructor(
         latitude: Double?,
         longitude: Double?,
         hasLocation: Boolean,
-        token: String
+        token: String,
+        radius: Float
     ) {
         context.dataStore.edit { prefs ->
             prefs[ID] = id
@@ -67,17 +73,21 @@ class UserPreferences @Inject constructor(
             longitude?.let { prefs[LONGITUDE] = it } ?: prefs.remove(LONGITUDE)
             prefs[HAS_LOCATION] = hasLocation
             prefs[TOKEN] = token
+
+            prefs[RADIUS] = radius
         }
     }
     suspend fun saveHasLocation(
         hasLocation: Boolean,
         latitude: Double,
         longitude: Double,
+        radius: Float
     ) {
         context.dataStore.edit { prefs ->
             prefs[HAS_LOCATION] = hasLocation
             prefs[LATITUDE] = latitude
             prefs[LONGITUDE] = longitude
+            prefs[RADIUS] = radius
         }
     }
 
@@ -95,7 +105,7 @@ class UserPreferences @Inject constructor(
         return combine(
             userId, userFName, userLName, userEmail, userProfilePic,
             latitude, longitude,
-            userToken
+            userToken, radius
         ) { values: Array<Any?> ->
             val id = values[0] as? String
             val firstName = values[1] as? String
@@ -105,6 +115,7 @@ class UserPreferences @Inject constructor(
             val latitude = values[5] as? Double?
             val longitude = values[6] as? Double?
             val token = values[7] as? String
+            val radius = values[8] as? Float
             if (
                 id != null &&
                 firstName != null &&
@@ -120,7 +131,8 @@ class UserPreferences @Inject constructor(
                     email = email,
                     profilePic = profilePic,
                     latitude = latitude,
-                    longitude = longitude
+                    longitude = longitude,
+                    radius = radius?: 3f
                 )
             } else null
         }

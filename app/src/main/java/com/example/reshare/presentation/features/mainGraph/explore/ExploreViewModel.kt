@@ -26,11 +26,14 @@ class ExploreViewModel  @Inject constructor(
     fun onEvent(event: ExploreUiEvent) {
         when (event) {
             is ExploreUiEvent.Refresh -> loadProducts()
+            is ExploreUiEvent.Search -> {
+                loadProducts(forceRefresh = true, query = event.searchText)
+            }
         }
     }
-    private fun loadProducts(forceRefresh: Boolean = true) {
+    private fun loadProducts(forceRefresh: Boolean = true, query: String? = null) {
         viewModelScope.launch {
-            getNearbyProductsUseCase(forceRefresh).collectLatest { result ->
+            getNearbyProductsUseCase(forceRefresh, query).collectLatest { result ->
                 when (result) {
                     is Resource.Loading -> {
                         _state.update { it.copy(isLoading = result.isLoading) }

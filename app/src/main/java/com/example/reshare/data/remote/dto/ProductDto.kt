@@ -25,6 +25,7 @@ data class Location(
     val type: String
 )
 
+
 data class CategorizedProductDto(
     val freeFood: List<ProductDto>,
     val nonFood: List<ProductDto>,
