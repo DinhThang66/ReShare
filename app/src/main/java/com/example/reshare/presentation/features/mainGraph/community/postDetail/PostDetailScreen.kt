@@ -5,7 +5,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.Interaction
@@ -30,13 +29,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
@@ -76,8 +72,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.reshare.R
 import com.example.reshare.domain.model.Post
-import com.example.reshare.presentation.features.mainGraph.community.CommunityUiEvent
-import com.example.reshare.presentation.utils.Resource
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.presentation.utils.formatTimeAgo
 import kotlinx.coroutines.delay

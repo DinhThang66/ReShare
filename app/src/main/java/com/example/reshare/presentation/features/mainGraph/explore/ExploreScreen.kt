@@ -1,6 +1,5 @@
 package com.example.reshare.presentation.features.mainGraph.explore
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +45,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.reshare.presentation.features.mainGraph.explore.listPager.ExploreListPager
 import com.example.reshare.presentation.features.mainGraph.explore.mapPager.ExploreMapPager
-import com.example.reshare.presentation.features.mainGraph.home.HomeUiEvent
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightPurple
 import kotlinx.coroutines.launch

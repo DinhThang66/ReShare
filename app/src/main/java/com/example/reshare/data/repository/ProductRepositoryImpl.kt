@@ -108,4 +108,29 @@ class ProductRepositoryImpl (
         emit(Resource.Success(productsFromApi.products.map { it.toDomain() }))
         emit(Resource.Loading(false))
     }
+
+    override suspend fun getMyProducts(
+        forceFetchFromRemote: Boolean
+    ): Flow<Resource<List<Product>>> =  flow  {
+        emit(Resource.Loading(true))
+
+        val productsFromApi = try {
+            api.getMyProducts()
+        }catch (e: IOException) {
+            emit(Resource.Error("Network error: ${e.message}"))
+            emit(Resource.Loading(false))
+            return@flow
+        } catch (e: HttpException) {
+            emit(Resource.Error("Server error: ${e.message}"))
+            emit(Resource.Loading(false))
+            return@flow
+        } catch (e: Exception) {
+            emit(Resource.Error("Unexpected error: ${e.message}"))
+            emit(Resource.Loading(false))
+            return@flow
+        }
+
+        emit(Resource.Success(productsFromApi.products.map { it.toDomain() }))
+        emit(Resource.Loading(false))
+    }
 }

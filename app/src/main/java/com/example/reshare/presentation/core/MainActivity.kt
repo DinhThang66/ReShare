@@ -33,12 +33,14 @@ import com.example.reshare.presentation.features.mainGraph.community.createPost.
 import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailScreen
 import com.example.reshare.presentation.features.mainGraph.community.userProfile.UserProfileScreen
 import com.example.reshare.presentation.features.mainGraph.home.chooseALocation.ChooseALocationScreen
+import com.example.reshare.presentation.features.mainGraph.home.giveAway.GiveAwayScreen
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
 import com.example.reshare.presentation.features.mainGraph.home.makeARequest.MakeRequestScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
 import com.example.reshare.presentation.features.sideBar.MyImpactScreen
-import com.example.reshare.presentation.features.sideBar.MyListingsScreen
+import com.example.reshare.presentation.features.sideBar.myListing.MyListingsScreen
 import com.example.reshare.presentation.features.sideBar.MyWatchListScreen
+import com.example.reshare.presentation.features.sideBar.myProfile.MyProfileScreen
 import com.example.reshare.presentation.utils.Screen
 import com.example.reshare.ui.theme.ReShareTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -135,11 +137,12 @@ class MainActivity : ComponentActivity() {
                                     composable(Screen.MyListingsScreen.route) {
                                         MyListingsScreen(navController = navController)
                                     }
-//                            composable(Screen.MyProfileScreen.route) {
-//                                MyProfileScreen(navController = navController)
-//                            }
                                     composable(Screen.MyProfileScreen.route) {
-                                        SetYourLocationScreen()
+                                        MyProfileScreen(navController = navController)
+                                    }
+
+                                    composable(Screen.GiveAway.route) {
+                                        GiveAwayScreen(navController = navController)
                                     }
                                 }
                             }

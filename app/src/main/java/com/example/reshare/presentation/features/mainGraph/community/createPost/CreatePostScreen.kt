@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Campaign
-import androidx.compose.material.icons.outlined.Help
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Recycling
 import androidx.compose.material.icons.outlined.RestaurantMenu
@@ -47,7 +45,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -78,7 +75,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.reshare.R
 import com.example.reshare.domain.model.User
-import com.example.reshare.presentation.features.mainGraph.community.postDetail.PostDetailViewModel
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.LightGray
 import com.example.reshare.ui.theme.LightPurple

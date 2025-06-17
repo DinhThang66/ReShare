@@ -59,7 +59,6 @@ import com.example.reshare.domain.model.Product
 import com.example.reshare.ui.theme.DarkPurple
 import com.example.reshare.ui.theme.Pink
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MakeRequestScreen(
     navController: NavController,

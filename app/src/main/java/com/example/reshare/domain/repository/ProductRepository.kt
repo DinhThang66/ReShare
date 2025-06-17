@@ -14,4 +14,8 @@ interface ProductRepository {
         forceFetchFromRemote: Boolean,
         query: String? = null
     ): Flow<Resource<List<Product>>>
+
+    suspend fun getMyProducts(
+        forceFetchFromRemote: Boolean,
+    ): Flow<Resource<List<Product>>>
 }

@@ -73,6 +73,8 @@ interface AppApi {
     suspend fun getAllNearbyProducts(
         @Query("q") query: String? = null
     ): ProductListDto
+    @GET("api/product/mine")
+    suspend fun getMyProducts(): ProductListDto
 
     // Request Endpoint
     @POST("api/requests")
