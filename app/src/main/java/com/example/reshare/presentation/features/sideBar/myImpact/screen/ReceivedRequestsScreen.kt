@@ -1,9 +1,12 @@
-package com.example.reshare.presentation.features.sideBar.myListing
+package com.example.reshare.presentation.features.sideBar.myImpact.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,24 +21,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -44,111 +42,86 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.reshare.R
-import com.example.reshare.domain.model.Product
-import com.example.reshare.presentation.components.ExploreListItem
-import com.example.reshare.presentation.utils.Screen
+import com.example.reshare.domain.model.Requests
+import com.example.reshare.domain.model.Requests2
+import com.example.reshare.presentation.features.sideBar.myImpact.MyImpactUiEvent
+import com.example.reshare.presentation.features.sideBar.myImpact.MyImpactViewModel
 import com.example.reshare.presentation.utils.capitalizeFirst
 import com.example.reshare.presentation.utils.getBadgeStyle
 
 @Composable
-fun MyListingsScreen(
-    navController: NavController,
-    viewModel: MyListingsViewModel = hiltViewModel()
+fun ReceivedRequestsScreen(
+    viewModel: MyImpactViewModel
 ) {
     val state by viewModel.state.collectAsState()
 
-    Scaffold(
-        topBar = { TopBarCustom(onClick = { navController.popBackStack() }) },
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.White)
-        ) {
-            when {
-                state.isLoading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                state.error.isNotBlank() ->{
-                    Text("Lỗi: ${state.error}", color = Color.Red)
-                }
-                else -> {
-                    LazyColumn {
-                        items(state.products) {
-                            Item(
-                                navController = navController,
-                                product = it,
-                                rating = 5.0f
-                            )
-                        }
-                    }
-                }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(state.receivedRequests,
+            key = { it.id }
+        ) { req ->
+            ReceivedRequestsItem(
+                requests = req
+            ) { newStatus ->
+                viewModel.onEvent(
+                    MyImpactUiEvent.UpdateRequestStatus(
+                        requestId = req.id,
+                        status = newStatus
+                    )
+                )
+                Log.d("oke123", state.receivedRequests.toString())
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBarCustom(
-    onClick: () -> Unit
-) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "My Listing",
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = onClick
-            ) {
-                Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
-            }
-        },
-        modifier = Modifier.shadow(2.dp)
-    )
-}
-
 @SuppressLint("DefaultLocale")
 @Composable
-fun Item(
-    navController: NavController,
-    product: Product,
-    rating: Float?
+fun ReceivedRequestsItem(
+    requests: Requests2,
+    onStatusChange: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .padding(horizontal = 8.dp, vertical = 8.dp)
-            .height(110.dp)
+            .height(140.dp)
             .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(16.dp),
     ) {
         Row {
-            Box(modifier = Modifier.width(110.dp).fillMaxHeight()){
+            Box(modifier = Modifier
+                .width(110.dp)
+                .fillMaxHeight())
+            {
                 // Left Image
                 AsyncImage(
-                    model = product.images[0],
+                    model = requests.productId.images[0],
                     contentDescription = "Product Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize(),
                     placeholder = painterResource(R.drawable.img),
                     error = painterResource(R.drawable.img)
                 )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(6.dp)
+                        .size(24.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.StarOutline,
+                        contentDescription = "Favorite",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -166,23 +139,40 @@ fun Item(
 
                     ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (product.originalPrice != null) {
+                        val statusStyle = getStatusBadgeStyle(requests.status)
+                        Text(
+                            text = requests.status.capitalizeFirst(),
+                            color = statusStyle.textColor,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            style = TextStyle(lineHeight = 12.sp),
+                            modifier = Modifier
+                                .background(statusStyle.backgroundColor, shape = RoundedCornerShape(8.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(5.dp))
+
+                        if (requests.productId.originalPrice != null) {
                             Text(
-                                text = "${product.originalPrice} k",
+                                text = "${requests.productId.originalPrice} k",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 style = TextStyle(lineHeight = 12.sp),
                                 modifier = Modifier
-                                    .background(Color.Black.copy(alpha = 0.7f), shape = RoundedCornerShape(8.dp))
+                                    .background(
+                                        Color.Black.copy(alpha = 0.7f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
 
                         Spacer(modifier = Modifier.width(5.dp))
-                        val style = getBadgeStyle(product.tag)
+                        val style = getBadgeStyle(requests.productId.tag)
                         Text(
-                            text = product.tag.capitalizeFirst(),
+                            text = requests.productId.tag.capitalizeFirst(),
                             color = style.textColor,
                             fontSize = 12.sp,
                             style = TextStyle(lineHeight = 12.sp),
@@ -194,7 +184,7 @@ fun Item(
                     // Title
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = product.title,
+                        text = requests.productId.title,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         maxLines = 1,
@@ -205,8 +195,9 @@ fun Item(
                     //Seller & rating
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "Request by: ", fontSize = 14.sp)
                         AsyncImage(
-                            model = product.createdBy.profilePic,
+                            model = requests.requestedBy.profilePic,
                             contentDescription = "User Avatar",
                             modifier = Modifier
                                 .size(24.dp)
@@ -216,20 +207,37 @@ fun Item(
                             error = painterResource(R.drawable.user)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = product.createdBy.firstName, fontSize = 14.sp)
+                        Text(text = requests.requestedBy.firstName, fontSize = 14.sp)
                         Spacer(modifier = Modifier.width(4.dp))
-                        if (rating != null) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Rating",
-                                tint = Color(0xFFFFD700),
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(text = rating.toString(), fontSize = 14.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Pickup Time: ${requests.pickupTime}",
+                        fontSize = 14.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (requests.status == "pending") {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { onStatusChange("accepted") },
+                                colors  = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) { Text("Accept", color = Color.White, fontSize = 12.sp) }
+
+                            Button(
+                                onClick = { onStatusChange("rejected") },
+                                colors  = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) { Text("Reject", color = Color.White, fontSize = 12.sp) }
                         }
                     }
                 }
             }
+
+            // Cho
         }
     }
 }

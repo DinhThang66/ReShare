@@ -4,13 +4,18 @@ import com.example.reshare.data.local.post.PostEntity
 import com.example.reshare.data.local.product.ProductEntity
 import com.example.reshare.data.remote.dto.CategorizedProductDto
 import com.example.reshare.data.remote.dto.CommentDto
+import com.example.reshare.data.remote.dto.LocationDto
+import com.example.reshare.data.remote.dto.MyRequestsDto
 import com.example.reshare.data.remote.dto.PostDto
 import com.example.reshare.data.remote.dto.ProductDto
+import com.example.reshare.data.remote.dto.ReceivedRequestsDto
 import com.example.reshare.data.remote.dto.UserDto
 import com.example.reshare.domain.model.CategorizedProducts
 import com.example.reshare.domain.model.Comment
 import com.example.reshare.domain.model.Post
 import com.example.reshare.domain.model.Product
+import com.example.reshare.domain.model.Requests
+import com.example.reshare.domain.model.Requests2
 import com.example.reshare.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -170,3 +175,25 @@ fun CategorizedProductDto.toDomain(): CategorizedProducts {
         want = want.map { it.toDomain() }
     )
 }
+
+fun MyRequestsDto.toDomain(): Requests {
+    return Requests(
+        id = _id,
+        productId = productId.toDomain(),
+        pickupTime = pickupTime,
+        status = status,
+        createdAt = createdAt
+    )
+}
+fun ReceivedRequestsDto.toDomain(): Requests2 {
+    return Requests2(
+        id = _id,
+        productId = productId.toDomain(),
+        pickupTime = pickupTime,
+        requestedBy = requestedBy.toDomain(),
+        status = status,
+        createdAt = createdAt
+    )
+}
+
+

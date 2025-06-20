@@ -8,15 +8,19 @@ import com.example.reshare.data.remote.dto.LikeResponseDto
 import com.example.reshare.data.remote.dto.LocationRequest
 import com.example.reshare.data.remote.dto.LoginDto
 import com.example.reshare.data.remote.dto.LoginRequest
+import com.example.reshare.data.remote.dto.MyRequestsDto
 import com.example.reshare.data.remote.dto.PostDto
 import com.example.reshare.data.remote.dto.PostListDto
 import com.example.reshare.data.remote.dto.ProductListDto
+import com.example.reshare.data.remote.dto.ReceivedRequestsDto
 import com.example.reshare.data.remote.dto.RegisterDto
 import com.example.reshare.data.remote.dto.RegisterRequest
 import com.example.reshare.data.remote.dto.RequestResponseDto
 import com.example.reshare.data.remote.dto.SendRequestBody
 import com.example.reshare.data.remote.dto.StreamTokenDto
 import com.example.reshare.data.remote.dto.UpdateLocationDto
+import com.example.reshare.data.remote.dto.UpdateStatusBody
+import com.example.reshare.data.remote.dto.UpdateStatusResponse
 import com.example.reshare.data.remote.dto.UserDto
 import com.example.reshare.presentation.utils.ApiConstants
 import okhttp3.MultipartBody
@@ -81,6 +85,15 @@ interface AppApi {
     suspend fun sendProductRequest(
         @Body request: SendRequestBody
     ): Response<RequestResponseDto>
+    @GET("api/requests/mine")
+    suspend fun getMyRequests(): Response<List<MyRequestsDto>>
+    @GET("api/requests/received")
+    suspend fun getReceivedRequests(): Response<List<ReceivedRequestsDto>>
+    @PATCH("api/requests/{id}/status")
+    suspend fun updateRequestStatus(
+        @Path("id") requestId: String,
+        @Body body: UpdateStatusBody
+    ): Response<UpdateStatusResponse>
 
     companion object {
         const val BASE_URL = ApiConstants.BASE_URL

@@ -37,7 +37,7 @@ import com.example.reshare.presentation.features.mainGraph.home.giveAway.GiveAwa
 import com.example.reshare.presentation.features.mainGraph.home.itemDetail.ItemDetailScreen
 import com.example.reshare.presentation.features.mainGraph.home.makeARequest.MakeRequestScreen
 import com.example.reshare.presentation.features.mainGraph.messages.ChatScreen
-import com.example.reshare.presentation.features.sideBar.MyImpactScreen
+import com.example.reshare.presentation.features.sideBar.myImpact.MyImpactScreen
 import com.example.reshare.presentation.features.sideBar.myListing.MyListingsScreen
 import com.example.reshare.presentation.features.sideBar.MyWatchListScreen
 import com.example.reshare.presentation.features.sideBar.myProfile.MyProfileScreen

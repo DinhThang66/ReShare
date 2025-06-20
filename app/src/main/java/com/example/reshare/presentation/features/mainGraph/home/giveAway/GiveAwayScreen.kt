@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -158,6 +159,10 @@ fun GiveAwayScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .padding(top = 24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DarkPurple,
+                    contentColor = Color.White
+                ),
                 shape = RoundedCornerShape(50)
             ) {
                 Text(
@@ -346,7 +351,7 @@ fun ItemForm(
 
         Text(text = "Post Type", fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("free", "paid", "wanted").forEach { type ->
+            listOf("free", "reduced", "paid", "wanted").forEach { type ->
                 SelectableChip(
                     label = type,
                     isSelected = type == postType,
@@ -375,7 +380,7 @@ fun SelectableChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
             .clip(RoundedCornerShape(50))
             .background(if (isSelected) DarkPurple else Color.LightGray)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 10.dp, vertical = 8.dp)
     ) {
         Text(
             text = label,
