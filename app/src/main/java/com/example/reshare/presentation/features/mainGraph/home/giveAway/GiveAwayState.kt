@@ -10,5 +10,9 @@ data class GiveAwayState (
     val pickupTime: String = "",
     val instructions: String = "",
     val postType: String = "free",
-    val productType: String = "food"
+    val productType: String = "food",
+
+    val isSubmitting: Boolean = false,
+    val isSuccess: Boolean = false,
+    val error: String? = null
 )

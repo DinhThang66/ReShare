@@ -33,6 +33,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -79,6 +80,12 @@ interface AppApi {
     ): ProductListDto
     @GET("api/product/mine")
     suspend fun getMyProducts(): ProductListDto
+    @Multipart
+    @POST("api/product")
+    suspend fun createProduct(
+        @PartMap partMap: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part images: List<MultipartBody.Part>
+    ): Response<Unit>
 
     // Request Endpoint
     @POST("api/requests")

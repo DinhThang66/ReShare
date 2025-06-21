@@ -12,4 +12,6 @@ sealed class GiveAwayUiEvent {
     data class SetInstructions(val instructions: String) : GiveAwayUiEvent()
     data class SetPostType(val type: String) : GiveAwayUiEvent()
     data class SetProductType(val type: String) : GiveAwayUiEvent()
+
+    data object Submit : GiveAwayUiEvent()
 }

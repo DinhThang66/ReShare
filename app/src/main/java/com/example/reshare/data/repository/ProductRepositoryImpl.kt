@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -132,5 +134,21 @@ class ProductRepositoryImpl (
 
         emit(Resource.Success(productsFromApi.products.map { it.toDomain() }))
         emit(Resource.Loading(false))
+    }
+
+    override suspend fun createProduct(
+        partMap: Map<String, RequestBody>,
+        images: List<MultipartBody.Part>,
+    ): Resource<Unit> {
+        return try {
+            val response = api.createProduct(partMap, images)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.errorBody()?.string() ?: "Unknown error")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Unexpected error: ${e.message}")
+        }
     }
 }

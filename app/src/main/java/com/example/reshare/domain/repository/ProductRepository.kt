@@ -4,6 +4,8 @@ import com.example.reshare.domain.model.CategorizedProducts
 import com.example.reshare.domain.model.Product
 import com.example.reshare.presentation.utils.Resource
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 interface ProductRepository {
     suspend fun getCategorizedProducts(
@@ -18,4 +20,9 @@ interface ProductRepository {
     suspend fun getMyProducts(
         forceFetchFromRemote: Boolean,
     ): Flow<Resource<List<Product>>>
+
+    suspend fun createProduct(
+        partMap: Map<String, @JvmSuppressWildcards RequestBody>,
+        images: List<MultipartBody.Part>
+    ): Resource<Unit>
 }
