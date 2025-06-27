@@ -149,7 +149,10 @@ fun ItemDetailScreen(
                     roleLabel = "Personal",
                     roleColor = Color(0xFF6A1B9A),
                     description = it.description,
-                    tag = it.tag
+                    tag = it.tag,
+                    onAvatarClick = {
+                        navController.navigate(Screen.UserProfile.route + "/${it.createdBy.id}")
+                    }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 PickupInfoSection(
@@ -302,7 +305,8 @@ fun PostHeaderInfo(
     roleLabel: String,
     roleColor: Color,
     description: String,
-    tag: String
+    tag: String,
+    onAvatarClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -319,7 +323,8 @@ fun PostHeaderInfo(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color.LightGray),
+                    .background(Color.LightGray)
+                    .clickable(onClick = onAvatarClick),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(R.drawable.user),
                 error = painterResource(R.drawable.user)
