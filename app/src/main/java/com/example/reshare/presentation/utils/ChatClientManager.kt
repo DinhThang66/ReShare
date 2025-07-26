@@ -6,6 +6,10 @@ import io.getstream.chat.android.models.User
 object ChatClientManager {
     private var isConnected = false
 
+    fun resetConnectionState() {
+        isConnected = false
+    }
+
     fun connectIfNeeded(userId: String, name: String, image: String, token: String) {
         val client = ChatClient.instance()
 

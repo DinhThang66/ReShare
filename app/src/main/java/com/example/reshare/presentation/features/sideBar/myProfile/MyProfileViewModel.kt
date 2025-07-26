@@ -1,12 +1,13 @@
 package com.example.reshare.presentation.features.sideBar.myProfile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reshare.data.local.UserPreferences
 import com.example.reshare.domain.model.User
-import com.example.reshare.presentation.features.mainGraph.home.HomeUiEvent
+import com.example.reshare.presentation.utils.ChatClientManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.getstream.chat.android.models.InitializationState
+import io.getstream.chat.android.client.ChatClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -29,7 +30,11 @@ class MyProfileViewModel @Inject constructor(
         when (event) {
             is MyProfileUiEvent.Logout -> {
                 viewModelScope.launch {
-                    userPreferences.clearUser();
+                    userPreferences.clearUser()
+                    ChatClient.instance().disconnect(flushPersistence = true).enqueue {
+                        // onSuccess: navigate to Login or other cleanup if needed
+                        ChatClientManager.resetConnectionState()
+                    }
                 }
             }
         }
