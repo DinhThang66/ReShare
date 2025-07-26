@@ -18,4 +18,4 @@ Chính vì thế ứng dụng này được xây dựng với mục tiêu là t�
 Backend server cho ứng dụng ReShare được phát triển song song. Tìm Server repository [[here]](https://github.com/DinhThang66/ReShare_backend).
 
 ## 🚧 Tình trạng phát triển
-Đang được cập nhật.
+Hoàn thành.
